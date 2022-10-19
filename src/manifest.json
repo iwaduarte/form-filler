@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+  "name": "FormFiller",
+  "description": "Filling form the right way",
+  "version": "1.0",
+
+  "permissions": ["activeTab", "storage"],
+
+  "web_accessible_resources": ["css/menu.css"],
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["*.js"],
+      "run_at": "document_end"
+    }
+  ],
+
+  "browser_action": {
+    "default_popup": "index.html",
+    "default_icon": "assets/react.svg",
+    "default_title": "Form-Filler"
+  }
+}
