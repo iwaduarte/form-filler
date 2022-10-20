@@ -1,21 +1,17 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import './App.css'
+import { useState, Fragment } from "react";
+import reactLogo from "./assets/react.svg";
+import "./App.css";
+import Popup from "./pages/Popup.jsx";
+import Content from "./pages/Content.jsx";
 
-function App() {
-  const [count, setCount] = useState(0)
-
+const App = () => {
+  // return
   return (
-    <div className="App">
+    <>
+      <Content />
+      <Popup />
+    </>
+  );
+};
 
-        Variable sets
-        <h1 className="text-3xl font-bold underline">
-            Hello world!
-        </h1>
-        Add variable:
-        <img src={reactLogo} className="logo react" alt="React logo" />
-    </div>
-  )
-}
-
-export default App
+export default App;
