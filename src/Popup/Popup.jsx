@@ -1,7 +1,6 @@
-import React, { Fragment, useState } from "react";
-import reactLogo from "../assets/react.svg";
-import closeSVG from "../assets/close.svg";
-import trashSVG from "../assets/trash.svg";
+import React, { useState } from "react";
+import closeSVG from "./assets/close.svg";
+import trashSVG from "./assets/trash.svg";
 
 const exampleNames = [
   { name: "First Name", value: "Iwá", match: "" },
@@ -9,7 +8,7 @@ const exampleNames = [
   { name: "Email", value: "iwaduarte@gmail.com" },
 ];
 
-const Popup = (props) => {
+const Popup = () => {
   const [inputs, setInputs] = useState(exampleNames);
 
   const handleAddProperties = () => {};
