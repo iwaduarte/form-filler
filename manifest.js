@@ -12,7 +12,7 @@ const manifest = {
     },
   ],
   browser_action: {
-    default_icon: "src/Popup/assets/react.svg",
+    default_icon: "src/Popup/assets/form-filler.png",
     default_title: "Form-Filler",
     default_popup: "src/Popup/index.html",
   },
