@@ -12,12 +12,12 @@ const manifest = {
     },
   ],
   browser_action: {
-    default_icon: "src/Popup/assets/form-filler.png",
+    default_icon: "form-filler.png",
     default_title: "Form-Filler",
     default_popup: "src/Popup/index.html",
   },
-
-  permissions: ["activeTab", "storage"],
+  permissions: ["*://*/*"],
+  // permissions: ["activeTab", "storage"],
 };
 
 export default {

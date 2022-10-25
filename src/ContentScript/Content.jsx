@@ -28,6 +28,7 @@ const Content = ({ elem }) => {
   };
 
   useEffect(() => {
+    console.log("VAMOOOOOOOOOOOOOOO");
     const allInputs = Array.from(document.querySelectorAll("input,textarea"));
     allInputs.forEach((input, index) => {
       input.addEventListener("click", handleInputClick);
