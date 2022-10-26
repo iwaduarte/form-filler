@@ -7,7 +7,7 @@ const manifest = {
   },
   content_scripts: [
     {
-      js: ["src/ContentScript/Content.jsx"],
+      js: ["src/ContentScript/main.jsx"],
       matches: ["<all_urls>"],
     },
   ],
@@ -16,8 +16,8 @@ const manifest = {
     default_title: "Form-Filler",
     default_popup: "src/Popup/index.html",
   },
-  permissions: ["*://*/*"],
-  // permissions: ["activeTab", "storage"],
+  // permissions: ["*://*/*"],
+  permissions: ["activeTab", "storage"],
 };
 
 export default {
