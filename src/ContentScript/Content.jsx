@@ -1,14 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
+import { getFromStore, syncStore } from "../storage.js";
 
-const exampleNames = [
-  { name: "First Name", value: "Iwá", match: "" },
-  { name: "Last Name", value: "Duarte" },
-  { name: "Email", value: "iwaduarte@gmail.com" },
-];
-//it needs a css
-
-const Content = ({ elem }) => {
-  const [inputs] = useState(exampleNames);
+const Content = () => {
+  const [inputs, setInputs] = useState([]);
+  const [sync, setSync] = useState(false);
   const [displayList, setDisplayList] = useState(false);
   const [targetElement, setTargetElement] = useState(null);
   const [menuPositionTop, setMenuPositionTop] = useState(500);
@@ -48,6 +43,19 @@ const Content = ({ elem }) => {
       setReRender((prev) => prev + 1);
     }
   };
+
+  useEffect(() => {
+    syncStore(() => {
+      setSync((prev) => !prev);
+    });
+  }, []);
+
+  useEffect(() => {
+    getFromStore().then((data) => {
+      setInputs(data);
+    });
+  }, [inputs.length, sync]);
+
   useEffect(() => {
     const allInputs = Array.from(document.querySelectorAll("input,textarea"));
     inputsLength.current = allInputs.length;
