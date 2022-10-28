@@ -6,9 +6,9 @@ const setStore = (value) =>
       res("done");
     });
   });
-const getFromStore = () =>
+const getFromStore = (key) =>
   new Promise((res) => {
-    sync.get("formFiller", (data) => {
+    sync.get(key || "formFiller", (data) => {
       const { formFiller = [] } = data || {};
       res(formFiller);
     });
