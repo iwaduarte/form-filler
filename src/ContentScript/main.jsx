@@ -5,7 +5,7 @@ import css from "./content.css";
 import AutomaticFiller from "./AutomaticFiller.jsx";
 import { getFromStore } from "../storage.js";
 
-const ignoredURLs = ["google.com", "gmail.com"];
+const ignoredURLs = ["google.com", "gmail.com", "stackoverflow.com"];
 
 window.onload = async () => {
   const div = document.createElement("div");
@@ -16,6 +16,12 @@ window.onload = async () => {
   CSSStyle.replaceSync(css);
   shadow.adoptedStyleSheets = [CSSStyle];
   document.body.appendChild(div);
+
+  const url = document.location.href;
+
+  if (ignoredURLs.some((ignoredURL) => url.includes(ignoredURL))) {
+    return;
+  }
 
   ReactDOM.createRoot(shadow).render(
     <React.StrictMode>
