@@ -1,15 +1,10 @@
-import React, { useEffect, useRef, useState } from "react";
-import { getFromStore, syncStore } from "../storage.js";
+import React, { useEffect, useState } from "react";
 
-const Content = () => {
-  const [inputs, setInputs] = useState([]);
-  const [sync, setSync] = useState(false);
+const Content = ({ fields = [], reRender }) => {
   const [displayList, setDisplayList] = useState(false);
   const [targetElement, setTargetElement] = useState(null);
   const [menuPositionTop, setMenuPositionTop] = useState(500);
   const [menuPositionLeft, setMenuPositionLeft] = useState(500);
-  const [reRender, setReRender] = useState(0);
-  const inputsLength = useRef(0);
 
   const handleClickOutside = (e) => {
     const tagName = e.target.tagName.toLowerCase();
@@ -19,7 +14,7 @@ const Content = () => {
   };
 
   const handleListClick = (index) => {
-    const { value } = inputs[index] || {};
+    const { value } = fields[index] || {};
     if (!targetElement || !value) return false;
     targetElement.innerHTML = value;
     targetElement.value = value;
@@ -31,67 +26,28 @@ const Content = () => {
     setMenuPositionTop(e.pageY + 5);
     setDisplayList(true);
   };
-  const handleForceRender = () => {
-    const currentInputsLength =
-      document.querySelectorAll("input,textarea").length;
-
-    if (
-      currentInputsLength > 0 &&
-      currentInputsLength >= inputsLength.current
-    ) {
-      inputsLength.current = currentInputsLength;
-      setReRender((prev) => prev + 1);
-    }
-  };
-
-  useEffect(() => {
-    syncStore(() => {
-      setSync((prev) => !prev);
-    });
-  }, []);
-
-  useEffect(() => {
-    getFromStore().then((data) => {
-      setInputs(data);
-    });
-  }, [inputs.length, sync]);
 
   useEffect(() => {
     const allInputs = Array.from(document.querySelectorAll("input,textarea"));
-    inputsLength.current = allInputs.length;
-
     document.addEventListener("click", handleClickOutside);
-    allInputs.forEach((input, index) => {
+    allInputs.forEach((input) => {
       input.addEventListener("click", handleInputClick);
     });
-
     return () => {
       allInputs.forEach((input) => {
         input.removeEventListener("click", handleInputClick);
       });
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [displayList, reRender]);
-
-  useEffect(() => {
-    const reactRoot = document.getElementById("root");
-    if (reactRoot) {
-      const observer = new MutationObserver(handleForceRender);
-      const config = { attributes: false, childList: true, subtree: true };
-      observer.observe(reactRoot, config);
-      return () => {
-        observer.disconnect();
-      };
-    }
-  }, []);
+  }, [reRender, fields.length]);
 
   return displayList ? (
     <div
       style={{ top: menuPositionTop, left: menuPositionLeft }}
-      className={`flex bg-white  text-sm font-medium  text-gray-500 rounded-xl flex-wrap justify-center content-between absolute`}
+      className={`flex bg-white  text-sm font-medium  text-gray-500 rounded-xl flex-wrap justify-center  content-between absolute`}
     >
       <ul className="cursor-pointer">
-        {inputs?.map(({ name, value }, index) => {
+        {fields?.map(({ name, value }, index) => {
           return (
             <li
               key={index}

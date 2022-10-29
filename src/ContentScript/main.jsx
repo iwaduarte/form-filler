@@ -1,13 +1,11 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import Content from "./Content.jsx";
 import css from "./content.css";
-import AutomaticFiller from "./AutomaticFiller.jsx";
-import { getFromStore } from "../storage.js";
+import Context from "./Context.jsx";
 
 const ignoredURLs = ["google.com", "gmail.com", "stackoverflow.com"];
 
-window.onload = async () => {
+window.onload = () => {
   const div = document.createElement("div");
   const shadow = div.attachShadow({ mode: "open" });
   const CSSStyle = new CSSStyleSheet();
@@ -22,11 +20,13 @@ window.onload = async () => {
   if (ignoredURLs.some((ignoredURL) => url.includes(ignoredURL))) {
     return;
   }
-
+  // Create a Context Object surrounding the AutomaticFiller and Content
+  // Gets data from store
+  // 1) Updates "formFiller" properties
+  // 2) Disable icon and script if not enabled
   ReactDOM.createRoot(shadow).render(
     <React.StrictMode>
-      <Content />
-      <AutomaticFiller />
+      <Context />
     </React.StrictMode>
   );
 };
