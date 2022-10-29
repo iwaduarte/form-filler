@@ -1,16 +1,16 @@
 const { sync, onChanged } = chrome.storage;
 
-const setStore = (value) =>
+const setStore = (value, key = "formFiller") =>
   new Promise((res) => {
-    sync.set({ formFiller: value }, () => {
+    sync.set({ [key]: value }, () => {
       res("done");
     });
   });
-const getFromStore = (key) =>
+const getFromStore = (key = "formFiller") =>
   new Promise((res) => {
-    sync.get(key || "formFiller", (data) => {
-      const { formFiller = [] } = data || {};
-      res(formFiller);
+    sync.get(key, (data) => {
+      const { [key]: propKey = [] } = data || {};
+      res(key === null ? data : propKey);
     });
   });
 
