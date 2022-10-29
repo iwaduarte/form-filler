@@ -23,11 +23,18 @@ const Popup = () => {
   const [inputs, setInputs] = useState([]);
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
+  const [isEnabled, setIsEnabled] = useState(true);
 
-  const handleChange = (e) => {
-    const { id: type, value } = e.target;
-    const setInputValue = type === "name" ? setName : setValue;
-    setInputValue(value);
+  const handleChange = async (e) => {
+    const setInputValue = {
+      toggle: setIsEnabled,
+      name: setName,
+      value: setValue,
+    };
+    const { id, value, type, checked } = e.target;
+    const newValue = type === "checkbox" ? checked : value;
+    if (type === "checkbox") await setStore(checked, "isEnabled");
+    setInputValue[id](newValue);
   };
   const handleClear = () => {
     setName("");
@@ -42,8 +49,10 @@ const Popup = () => {
   };
 
   useEffect(() => {
-    getFromStore().then((data) => {
-      setInputs(data);
+    getFromStore(null).then((data) => {
+      const { formFiller, isEnabled: _isEnabled } = data;
+      setIsEnabled(_isEnabled);
+      setInputs(formFiller);
     });
   }, [inputs.length]);
 
@@ -53,6 +62,25 @@ const Popup = () => {
         <h1 className="text-gray-800 font-lg font-bold tracking-normal leading-tight mb-4">
           Form-Filler
         </h1>
+
+        <div className="flex items-center">
+          <span className="mr-1">OFF</span>
+          <div className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+            <input
+              id="toggle"
+              type="checkbox"
+              name="toggle"
+              checked={isEnabled}
+              onChange={handleChange}
+              className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+            />
+            <label
+              htmlFor="toggle"
+              className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer text-xs text-gray-700"
+            ></label>
+          </div>
+          <span className="ml-1">ON</span>
+        </div>
       </div>
       <div className="properties mb-8">
         <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-4">
