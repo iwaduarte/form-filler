@@ -8,6 +8,7 @@ const manifest = {
   content_scripts: [
     {
       js: ["src/ContentScript/main.jsx"],
+      run_at: "document_end",
       matches: ["<all_urls>"],
     },
   ],

@@ -9,6 +9,9 @@ module.exports = {
       width: {
         'screen-50': '50vw',
         'screen-25': '25vw',
+      },
+      zIndex: {
+        '1000': '1000',
       }
     },
   },
