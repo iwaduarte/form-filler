@@ -28,8 +28,16 @@ const Content = ({ fields = [], reRender }) => {
   };
 
   useEffect(() => {
-    const allInputs = Array.from(document.querySelectorAll("input,textarea"));
     document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, [displayList]);
+
+  useEffect(() => {
+    const selectors = `input[type='text'],input[type='radio'],input[type='checkbox'],input[type='email'],input[type='number'],input[type='url'],input[type='tel'],textarea`;
+    const allInputs = Array.from(document.querySelectorAll(selectors));
     allInputs.forEach((input) => {
       input.addEventListener("click", handleInputClick);
     });
@@ -37,14 +45,13 @@ const Content = ({ fields = [], reRender }) => {
       allInputs.forEach((input) => {
         input.removeEventListener("click", handleInputClick);
       });
-      document.removeEventListener("click", handleClickOutside);
     };
   }, [reRender, fields.length]);
 
   return displayList ? (
     <div
       style={{ top: menuPositionTop, left: menuPositionLeft }}
-      className={`flex bg-white  text-sm font-medium  text-gray-500 rounded-xl flex-wrap justify-center  content-between absolute`}
+      className={`flex z-1000 bg-white  text-sm font-medium  text-gray-500 rounded-xl flex-wrap justify-center  content-between absolute`}
     >
       <ul className="cursor-pointer">
         {fields?.map(({ name, value }, index) => {
