@@ -11,8 +11,6 @@ const ignoredURLs = {
 };
 
 const startApplication = () => {
-  console.log("loading...");
-
   const div = document.createElement("div");
   const shadow = div.attachShadow({ mode: "open" });
   const CSSStyle = new CSSStyleSheet();
@@ -26,11 +24,6 @@ const startApplication = () => {
 
   if (ignoredURLs[url]) return;
 
-  // Create a Context Object surrounding the AutomaticFiller and Content
-  // Gets data from store
-  // 1) Updates "formFiller" properties
-  // 2) Disable icon and script if not enabled
-
   ReactDOM.createRoot(shadow).render(
     <React.StrictMode>
       <Context />
@@ -39,4 +32,3 @@ const startApplication = () => {
 };
 
 startApplication();
-// window.addEventListener("load", startApplication);

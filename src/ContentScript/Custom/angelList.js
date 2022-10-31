@@ -12,12 +12,6 @@ const angelListFiller = (fields = []) => {
   textArea.value = message;
   textArea.innerHTML = message;
   textArea.dispatchEvent(new Event("change", { bubbles: true }));
-
-  // const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-  //   window.HTMLInputElement.prototype,
-  //   "value"
-  // ).set;
-  // nativeInputValueSetter.call(textArea, message);
 };
 
 export { angelListFiller };

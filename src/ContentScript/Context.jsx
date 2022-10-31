@@ -10,17 +10,16 @@ const Context = () => {
   const fieldsLength = useRef(0);
   const timeout = useRef(null);
   const isEnabled = useRef(true);
-
   const handleForceRender = () => {
     clearTimeout(timeout.current);
     timeout.current = setTimeout(() => {
-      const currentFieldsLength =
-        document.querySelectorAll("input,textarea").length;
-      if (currentFieldsLength > fieldsLength.current)
+      const selectors = `input[type='text'],input[type='radio'],input[type='checkbox'],input[type='email'],input[type='number'],input[type='url'],input[type='tel'],textarea`;
+      const currentFieldsLength = document.querySelectorAll(selectors).length;
+      if (currentFieldsLength > fieldsLength.current || c)
         setReRender((prev) => prev + 1);
 
       fieldsLength.current = currentFieldsLength;
-    }, 500);
+    }, 2200);
   };
 
   useEffect(() => {
@@ -38,12 +37,20 @@ const Context = () => {
   }, [sync]);
 
   useEffect(() => {
-    const reactRoot = document.getElementById("root");
+    const angelList = "#__next";
+    const defaultReactApp = "#root";
+    const reactRoot = document.querySelector(`${defaultReactApp},${angelList}`);
+    console.log("reactRoot", reactRoot);
     if (reactRoot) {
       const observer = new MutationObserver(handleForceRender);
-
-      const config = { attributes: false, childList: true, subtree: true };
+      const config = {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ["aria-hidden"],
+      };
       observer.observe(reactRoot, config);
+
       return () => {
         observer.disconnect();
       };
