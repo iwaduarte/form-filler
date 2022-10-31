@@ -3,9 +3,16 @@ import ReactDOM from "react-dom/client";
 import css from "./content.css";
 import Context from "./Context.jsx";
 
-const ignoredURLs = ["google.com", "gmail.com", "stackoverflow.com"];
+const ignoredURLs = {
+  "google.com": true,
+  "gmail.com": true,
+  "stackoverflow.com": true,
+  "linkedin.com": true,
+};
 
-window.onload = () => {
+const startApplication = () => {
+  console.log("loading...");
+
   const div = document.createElement("div");
   const shadow = div.attachShadow({ mode: "open" });
   const CSSStyle = new CSSStyleSheet();
@@ -15,18 +22,21 @@ window.onload = () => {
   shadow.adoptedStyleSheets = [CSSStyle];
   document.body.appendChild(div);
 
-  const url = document.location.href;
+  const url = document.location.hostname;
 
-  if (ignoredURLs.some((ignoredURL) => url.includes(ignoredURL))) {
-    return;
-  }
+  if (ignoredURLs[url]) return;
+
   // Create a Context Object surrounding the AutomaticFiller and Content
   // Gets data from store
   // 1) Updates "formFiller" properties
   // 2) Disable icon and script if not enabled
+
   ReactDOM.createRoot(shadow).render(
     <React.StrictMode>
       <Context />
     </React.StrictMode>
   );
 };
+
+startApplication();
+// window.addEventListener("load", startApplication);

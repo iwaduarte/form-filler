@@ -1,3 +1,5 @@
+// noinspection JSIncompatibleTypesComparison
+
 const { sync, onChanged } = chrome.storage;
 
 const setStore = (value, key = "formFiller") =>
