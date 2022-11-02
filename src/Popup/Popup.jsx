@@ -50,7 +50,7 @@ const Popup = () => {
 
   useEffect(() => {
     getFromStore(null).then((data) => {
-      const { formFiller, isEnabled: _isEnabled } = data;
+      const { formFiller = [], isEnabled: _isEnabled = true } = data;
       setIsEnabled(_isEnabled);
       setInputs(formFiller);
     });
