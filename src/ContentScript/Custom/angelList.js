@@ -1,4 +1,17 @@
-const angelListFiller = (fields = []) => {
+const config = {
+  attributes: true,
+  childList: true,
+  subtree: true,
+  attributeFilter: ["aria-hidden"],
+};
+
+const handleMutation = () => {
+  setTimeout(() => {
+    filler();
+  }, 500);
+};
+
+const filler = (fields = []) => {
   const [textArea] = document.getElementsByTagName("textarea");
   if (!textArea) return;
 
@@ -14,4 +27,4 @@ const angelListFiller = (fields = []) => {
   textArea.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
-export { angelListFiller };
+export { filler, config, handleMutation };
