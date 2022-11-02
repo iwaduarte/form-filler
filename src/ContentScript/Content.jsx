@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const Content = ({ fields = [], reRender }) => {
+const Content = ({ fields = [] }) => {
   const [displayList, setDisplayList] = useState(false);
   const [targetElement, setTargetElement] = useState(null);
   const [menuPositionTop, setMenuPositionTop] = useState(500);
@@ -29,7 +29,6 @@ const Content = ({ fields = [], reRender }) => {
 
   useEffect(() => {
     document.addEventListener("click", handleClickOutside);
-
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
@@ -46,7 +45,7 @@ const Content = ({ fields = [], reRender }) => {
         input.removeEventListener("click", handleInputClick);
       });
     };
-  }, [reRender, fields.length]);
+  }, [fields.length]);
 
   return displayList ? (
     <div
