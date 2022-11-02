@@ -2,7 +2,7 @@ import pkg from "./package.json";
 
 const manifest = {
   background: {
-    scripts: ["src/Background/background.js"],
+    scripts: ["src/Background/background.js", "src/Background/hot-reload.js"],
     persistent: false,
   },
   content_scripts: [
@@ -18,7 +18,7 @@ const manifest = {
     default_popup: "src/Popup/index.html",
   },
   // permissions: ["*://*/*"],
-  permissions: ["activeTab", "storage"],
+  permissions: ["activeTab", "storage", "management"],
 };
 
 export default {
