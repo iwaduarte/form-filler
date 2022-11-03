@@ -1,21 +1,36 @@
+import { data } from "../cacheData.js";
+
+const watchSelector = "body";
 const config = {
-  attributes: true,
+  attributes: false,
   childList: true,
-  subtree: true,
-  attributeFilter: ["aria-hidden"],
+  subtree: false,
 };
 
-const handleMutation = () => {
-  setTimeout(() => {
-    filler();
-  }, 500);
+const handleMutation = (mutationList) => {
+  clearTimeout(data.timeoutId);
+  data.timeoutId = setTimeout(() => {
+    const shouldUpdate = mutationList.some((mutationRecord) => {
+      const { target } = mutationRecord;
+      return (
+        target.tagName !== "TEXTAREA" &&
+        target.className === "route--Jobs Modal__open"
+      );
+    });
+    if (!shouldUpdate) return;
+    console.log("filling textArea");
+    filler(data.store);
+  }, 300);
 };
 
 const filler = (fields = []) => {
   const [textArea] = document.getElementsByTagName("textarea");
+
   if (!textArea) return;
 
   const { value } = fields.find((field) => field.name === "Good Fit") || {};
+  if (!value) return;
+
   const userName = textArea?.placeholder?.replace(
     /Write a note to (.+) at.+/,
     "$1"
@@ -27,4 +42,4 @@ const filler = (fields = []) => {
   textArea.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
-export { filler, config, handleMutation };
+export { filler, config, handleMutation, watchSelector };

@@ -49,9 +49,10 @@ const defaultHandleMutation = (mutationList) => {
   }, 300);
 };
 
-const observeMutations = ({ config, handleMutation }) => {
-  const watchSelectors = ["#root", "#__next"].join(",");
-  const reactRoot = document.querySelector(watchSelectors);
+const observeMutations = ({ config, handleMutation, watchSelector = "" }) => {
+  const watchSelectors = ["#root", "#__next"];
+  watchSelector && watchSelectors.unshift(watchSelector);
+  const reactRoot = document.querySelector(watchSelectors.join(","));
   console.log("reactRoot", reactRoot);
   if (reactRoot) {
     const observer = new MutationObserver(
@@ -62,6 +63,7 @@ const observeMutations = ({ config, handleMutation }) => {
       childList: true,
       subtree: true,
     };
+
     observer.observe(reactRoot, _config);
 
     return observer;

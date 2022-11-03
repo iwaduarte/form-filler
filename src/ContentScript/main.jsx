@@ -16,6 +16,7 @@ const ignoredURLs = {
   "gmail.com": true,
   "stackoverflow.com": true,
   "linkedin.com": true,
+  "github.com": true,
 };
 
 const startApplication = async () => {
@@ -31,7 +32,11 @@ const startApplication = async () => {
 
   if (ignoredURLs[url]) return;
 
+  const { config, handleMutation, filler, watchSelector } =
+    siteConfiguration[url] || {};
+  const fillForms = filler || defaultFiller;
   const { isEnabled, formFiller } = await getFromStore(null);
+
   data.store = formFiller;
 
   syncStore((changes) => {
@@ -44,11 +49,9 @@ const startApplication = async () => {
 
   if (!isEnabled) return;
 
-  const { config, handleMutation, filler } = siteConfiguration[url] || {};
-  const fillForms = filler || defaultFiller;
   fillForms(data.store);
 
-  const observer = observeMutations({ config, handleMutation });
+  const observer = observeMutations({ config, handleMutation, watchSelector });
 
   ReactDOM.createRoot(shadow).render(
     <React.StrictMode>
