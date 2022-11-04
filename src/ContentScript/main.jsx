@@ -28,8 +28,7 @@ const startApplication = async () => {
   CSSStyle.replaceSync(css);
   shadow.adoptedStyleSheets = [CSSStyle];
   document.body.appendChild(div);
-  const url = document.location.hostname;
-
+  const url = document.location.hostname.replace("www.", "");
   if (ignoredURLs[url]) return;
 
   const { config, handleMutation, filler, watchSelector } =
@@ -51,8 +50,7 @@ const startApplication = async () => {
 
   fillForms(data.store);
 
-  const observer = observeMutations({ config, handleMutation, watchSelector });
-
+  observeMutations({ config, handleMutation, watchSelector });
   ReactDOM.createRoot(shadow).render(
     <React.StrictMode>
       <Context fields={data.store} />
