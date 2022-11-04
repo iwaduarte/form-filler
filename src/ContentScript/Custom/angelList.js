@@ -1,6 +1,5 @@
 import { data } from "../cacheData.js";
 
-const watchSelector = "body";
 const config = {
   attributes: false,
   childList: true,

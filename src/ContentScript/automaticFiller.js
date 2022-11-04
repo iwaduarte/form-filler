@@ -50,7 +50,7 @@ const defaultHandleMutation = (mutationList) => {
 };
 
 const observeMutations = ({ config, handleMutation, watchSelector = "" }) => {
-  const watchSelectors = ["#root", "#__next"];
+  const watchSelectors = ["#root", "#__next", "body"];
   watchSelector && watchSelectors.unshift(watchSelector);
   const reactRoot = document.querySelector(watchSelectors.join(","));
   console.log("reactRoot", reactRoot);
