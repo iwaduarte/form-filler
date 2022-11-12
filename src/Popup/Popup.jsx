@@ -57,7 +57,7 @@ const Popup = () => {
   }, [inputs.length]);
 
   return (
-    <div className="w-screen py-6 px-5 md:px-10 bg-gray-100 shadow-md rounded-xl border text-gray-800 border-gray-400">
+    <div className=" py-6 px-5 md:px-10 bg-gray-100 shadow-md rounded-xl border text-gray-800 border-gray-400">
       <div className="flex justify-between mb-4">
         <h1 className="text-gray-800 font-lg font-bold tracking-normal leading-tight mb-4">
           Form-Filler
@@ -82,11 +82,11 @@ const Popup = () => {
           <span className="ml-1">ON</span>
         </div>
       </div>
-      <div className="properties mb-8">
+      <div className="properties mb-8 ">
         <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-4">
           Properties
         </h1>
-        <ul>
+        <ul className="flex flex-col self-center h-[38vh] overflow-y-auto">
           {inputs?.map((input, index) => {
             const { name, value } = input;
             return (
@@ -109,30 +109,31 @@ const Popup = () => {
           })}
         </ul>
       </div>
-      <label className="block text-left" htmlFor="name">
-        <span className="text-gray-800 text-sm font-bold "> Field Name:</span>
-        <input
-          id="name"
-          value={name}
-          onChange={handleChange}
-          className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
-          placeholder="(i.e Email, First Name, Last Name)"
-        />
-      </label>
+      <div className="">
+        <label className="block text-left" htmlFor="name">
+          <span className="text-gray-800 text-sm font-bold "> Field Name:</span>
+          <input
+            id="name"
+            value={name}
+            onChange={handleChange}
+            className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
+            placeholder="(i.e Email, First Name, Last Name)"
+          />
+        </label>
 
-      <label className="block text-left" htmlFor="name">
-        <span className="text-gray-800 text-sm font-bold leading-tight tracking-normal">
-          Field Value:
-        </span>
-        <input
-          id="value"
-          value={value}
-          onChange={handleChange}
-          className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
-          placeholder="(i.e Email, First Name, Last Name)"
-        />
-      </label>
-
+        <label className="block text-left" htmlFor="name">
+          <span className="text-gray-800 text-sm font-bold leading-tight tracking-normal">
+            Field Value:
+          </span>
+          <input
+            id="value"
+            value={value}
+            onChange={handleChange}
+            className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
+            placeholder="(i.e Email, First Name, Last Name)"
+          />
+        </label>
+      </div>
       <div className="flex items-center justify-start w-full">
         <button
           onClick={handleAddProperty}

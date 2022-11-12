@@ -34,5 +34,11 @@ body {
   background-color: #68D391;
 }
 
+body::-webkit-scrollbar {
+  display: none !important;
+}
 
+body::-webkit-scrollbar-button {
+  display: none !important;
+}
 
