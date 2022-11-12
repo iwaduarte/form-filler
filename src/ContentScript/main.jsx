@@ -13,6 +13,10 @@ const siteConfiguration = {
 
 const whiteList = {};
 
+const startOnKey = (evt, fillForms) => {
+  if (evt.ctrlKey && evt.shiftKey && evt.key === "f") fillForms();
+};
+
 const startApplication = async () => {
   const div = document.createElement("div");
   const shadow = div.attachShadow({ mode: "open" });
@@ -23,12 +27,15 @@ const startApplication = async () => {
   shadow.adoptedStyleSheets = [CSSStyle];
   document.body.appendChild(div);
   const url = document.location.hostname.replace("www.", "");
-  if (whiteList[url]) return;
 
   const { config, handleMutation, filler, watchSelector } =
     siteConfiguration[url] || {};
   const fillForms = filler || defaultFiller;
   const { isEnabled, formFiller } = await getFromStore(null);
+
+  document.addEventListener("keydown", (evt) => startOnKey(fillForms, evt));
+
+  if (whiteList[url]) return;
 
   data.store = formFiller;
 
