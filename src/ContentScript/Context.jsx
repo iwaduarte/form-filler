@@ -5,7 +5,7 @@ import Content from "./Content.jsx";
 const Context = ({ fields: _fields }) => {
   const [fields, setFields] = useState(_fields);
   const [sync, setSync] = useState(false);
-  const isEnabled = useRef(true);
+  const isEnabled = useRef(false);
 
   useEffect(() => {
     syncStore(() => {
