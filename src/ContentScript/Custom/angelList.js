@@ -41,4 +41,4 @@ const filler = (fields = []) => {
   textArea.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
-export { filler, config, handleMutation, watchSelector };
+export { filler, config, handleMutation };
