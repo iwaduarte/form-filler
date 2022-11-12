@@ -11,13 +11,7 @@ const siteConfiguration = {
   "angel.co": angelList,
 };
 
-const ignoredURLs = {
-  "google.com": true,
-  "gmail.com": true,
-  "stackoverflow.com": true,
-  "linkedin.com": true,
-  "github.com": true,
-};
+const whiteList = {};
 
 const startApplication = async () => {
   const div = document.createElement("div");
@@ -29,7 +23,7 @@ const startApplication = async () => {
   shadow.adoptedStyleSheets = [CSSStyle];
   document.body.appendChild(div);
   const url = document.location.hostname.replace("www.", "");
-  if (ignoredURLs[url]) return;
+  if (whiteList[url]) return;
 
   const { config, handleMutation, filler, watchSelector } =
     siteConfiguration[url] || {};
