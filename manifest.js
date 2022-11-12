@@ -17,8 +17,7 @@ const manifest = {
     default_title: "Form-Filler",
     default_popup: "src/Popup/index.html",
   },
-  // permissions: ["*://*/*"],
-  permissions: ["activeTab", "storage", "management"],
+  permissions: ["activeTab", "tabs", "storage", "management", "<all_urls>"],
 };
 
 export default {
