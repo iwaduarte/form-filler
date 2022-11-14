@@ -48,6 +48,17 @@ const Popup = () => {
     setInputs(await deleteProperty(index));
   };
 
+  const handleFile = (e) => {
+    const {
+      target: { files },
+    } = e;
+    const [file] = files;
+
+    if (file.type !== "pdf") return;
+    console.log("e", file);
+    console.log(typeof file);
+  };
+
   useEffect(() => {
     getFromStore(null).then((data) => {
       const { formFiller = [], isEnabled: _isEnabled = true } = data;
@@ -82,7 +93,7 @@ const Popup = () => {
           <span className="ml-1">ON</span>
         </div>
       </div>
-      <div className="properties mb-8 ">
+      <div className="properties mb-1 py-3 border-b border-[#ead6d6] border-sky-500">
         <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-4">
           Properties
         </h1>
@@ -108,6 +119,10 @@ const Popup = () => {
             );
           })}
         </ul>
+      </div>
+      <div className="mb-2">
+        <span className="text-gray-800 text-sm font-bold ">Add PDF file:</span>
+        <input type="file" onChange={handleFile} />
       </div>
       <div className="">
         <label className="block text-left" htmlFor="name">
