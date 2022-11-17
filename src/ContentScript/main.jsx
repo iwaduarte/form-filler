@@ -5,10 +5,12 @@ import Context from "./Context.jsx";
 import { getFromStore, setStore, syncStore } from "../storage.js";
 import { defaultFiller, observeMutations } from "./automaticFiller.js";
 import * as angelList from "./Custom/angelList.js";
+import * as yCombinator from "./Custom/yCombinator.js";
 import { data } from "./cacheData.js";
 
 const siteConfiguration = {
   "angel.co": angelList,
+  "workatastartup.com": yCombinator,
 };
 
 const startOnKey = async (evt, fillForms, reactRoot, component) => {
@@ -83,7 +85,6 @@ const startApplication = async () => {
   });
 
   if (!data.whiteList[url] || !isEnabled) return;
-
   fillForms(data.store);
 
   observeMutations({ config, handleMutation, watchSelector });
