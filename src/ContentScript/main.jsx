@@ -23,7 +23,7 @@ const startOnKey = async (evt, fillForms, reactRoot, component) => {
     reactRoot.render(component);
   }
 
-  if (evt.ctrlKey && evt.altKey && evt.key === "A") {
+  if (evt.ctrlKey && evt.altKey && evt.key === "a") {
     const storedItem = (await getFromStore("whiteList")) || [];
     const newData = { ...storedItem, [url]: true };
     await setStore(newData);
@@ -39,7 +39,6 @@ const createShadowElement = () => {
   CSSStyle.replaceSync(css);
   shadow.adoptedStyleSheets = [CSSStyle];
   document.body.appendChild(div);
-
   return shadow;
 };
 
@@ -50,11 +49,7 @@ const createReactRoot = (element) => {
 const startApplication = async () => {
   const shadow = createShadowElement();
   const reactRoot = createReactRoot(shadow);
-  const component = (
-    <React.StrictMode>
-      <Context fields={data.store} />
-    </React.StrictMode>
-  );
+
   const url = document.location.hostname.replace("www.", "");
   const { config, handleMutation, filler, watchSelector } =
     siteConfiguration[url] || {};
@@ -68,6 +63,12 @@ const startApplication = async () => {
   data.whiteList = { ...data.whiteList, ...whiteList };
   data.store = formFiller;
   data.isEnabled = isEnabled;
+
+  const component = (
+    <React.StrictMode>
+      <Context fields={data.store} isEnabled={data.isEnabled} />
+    </React.StrictMode>
+  );
 
   document.addEventListener("keydown", (evt) =>
     startOnKey(evt, fillForms, reactRoot, component)

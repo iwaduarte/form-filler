@@ -2,10 +2,10 @@ import React, { useEffect, useRef, useState } from "react";
 import { getFromStore, syncStore } from "../storage.js";
 import Content from "./Content.jsx";
 
-const Context = ({ fields: _fields }) => {
+const Context = ({ fields: _fields, isEnabled: isEnabledInitial }) => {
   const [fields, setFields] = useState(_fields);
   const [sync, setSync] = useState(false);
-  const isEnabled = useRef(false);
+  const isEnabled = useRef(isEnabledInitial);
 
   useEffect(() => {
     syncStore(() => {
