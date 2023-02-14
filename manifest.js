@@ -12,6 +12,10 @@ const manifest = {
       matches: ["<all_urls>"],
     },
   ],
+  options_ui: {
+    page: "src/Options/index.html",
+    open_in_tab: true,
+  },
   browser_action: {
     default_icon: "form-filler.png",
     default_title: "Form-Filler",
