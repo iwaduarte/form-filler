@@ -17,7 +17,7 @@ const handleMutation = (mutationList) => {
     });
     if (!shouldUpdate) return;
     console.log("filling textArea");
-    filler(data.store);
+    filler(data.fields);
   }, 300);
 };
 

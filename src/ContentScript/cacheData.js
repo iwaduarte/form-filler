@@ -1,5 +1,5 @@
 const data = {
-  store: {},
+  fields: {},
   whiteList: {
     "boards.greenhouse.io": true,
     "apply.workable.com": true,

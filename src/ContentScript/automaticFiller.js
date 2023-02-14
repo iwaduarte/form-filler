@@ -45,7 +45,7 @@ const defaultHandleMutation = (mutationList) => {
     if (!shouldUpdate) return;
 
     console.log("Filling forms..");
-    defaultFiller(data.store);
+    defaultFiller(data.fields);
   }, 300);
 };
 

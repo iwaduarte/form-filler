@@ -19,7 +19,7 @@ const startOnKey = async (evt, fillForms, reactRoot, component) => {
   if (evt.ctrlKey && evt.altKey && evt.key === "f") {
     if (!data.isEnabled) return;
     console.log(url);
-    fillForms(data.store);
+    fillForms(data.fields);
     reactRoot.render(component);
   }
 
@@ -61,12 +61,12 @@ const startApplication = async () => {
   } = (await getFromStore(null)) || {};
 
   data.whiteList = { ...data.whiteList, ...whiteList };
-  data.store = formFiller;
+  data.fields = formFiller;
   data.isEnabled = isEnabled;
 
   const component = (
     <React.StrictMode>
-      <Context fields={data.store} isEnabled={data.isEnabled} />
+      <Context fields={data.fields} isEnabled={data.isEnabled} />
     </React.StrictMode>
   );
 
@@ -77,16 +77,16 @@ const startApplication = async () => {
   syncStore((changes) => {
     const { formFiller, isEnabled: _isEnabled = true, whiteList } = changes;
     const { newValue } = formFiller || {};
-    const store = newValue || data.store;
-    data.store = store;
+    const fields = newValue || data.fields;
+    data.fields = fields;
     data.whiteList = { ...data.whiteList, ...whiteList };
     data.isEnabled = isEnabled;
 
-    _isEnabled && fillForms(store);
+    _isEnabled && fillForms(fields);
   });
 
   if (!data.whiteList[url] || !isEnabled) return;
-  fillForms(data.store);
+  fillForms(data.fields);
 
   observeMutations({ config, handleMutation, watchSelector });
 
