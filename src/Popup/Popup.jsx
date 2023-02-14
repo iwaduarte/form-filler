@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import trashSVG from "./assets/trash.svg";
 import { getFromStore, setStore } from "../storage.js";
+import { addFile, getFile } from "../indexedDB.js";
 
 const addProperty = async (data) => {
   const { name, value } = data || {};
@@ -18,6 +19,8 @@ const deleteProperty = async (index) => {
 
   return storedItem;
 };
+
+const file = getFile().then((file) => {});
 
 const Popup = () => {
   const [inputs, setInputs] = useState([]);
@@ -48,15 +51,14 @@ const Popup = () => {
     setInputs(await deleteProperty(index));
   };
 
-  const handleFile = (e) => {
+  const handleFile = async (e) => {
     const {
       target: { files },
     } = e;
     const [file] = files;
 
-    if (file.type !== "pdf") return;
-    console.log("e", file);
-    console.log(typeof file);
+    if (file.type !== "application/pdf" || file.size > 1e7) return;
+    await addFile(file);
   };
 
   useEffect(() => {
