@@ -1,61 +1,106 @@
-const {
-  msIDBTransaction,
-  OIDBTransaction,
-  webkitIDBTransaction,
-  indexedDB: indexedDB1,
-  msIndexedDB,
-  OIndexedDB,
-  mozIndexedDB,
-  webkitIndexedDB,
-} = window;
-window.indexedDB =
-  indexedDB1 || webkitIndexedDB || mozIndexedDB || OIndexedDB || msIndexedDB;
-window.IDBTransaction =
-  window.IDBTransaction ||
-  webkitIDBTransaction ||
-  OIDBTransaction ||
-  msIDBTransaction;
-window.dbVersion = 1;
+const indexedDb = {
+  request: null,
+  database: null,
+  objectStore: null,
+};
 
-/*
-    Note: The recommended way to do this is assigning it to window.indexedDB,
-    to avoid potential issues in the global scope when web browsers start
-    removing prefixes in their implementations.
-    You can assign it to a variable, like var indexedDB… but then you have
-    to make sure that the code is contained within a function.
-*/
+let i = 0;
 
-// Create/open database
-const request = indexedDB.open("pdfFiles", dbVersion);
+indexedDb.request = indexedDB.open("pdfDatabase", 1);
 
-request.onsuccess = (event) => {
+indexedDb.request.addEventListener("success", (event) => {
   console.log("Success creating/accessing IndexedDB database");
-  database = event.target.result;
+  const { result } = event.target;
+  indexedDb.database = result;
 
-  database.onerror = (event) => {
-    console.log(
-      "Error creating/accessing IndexedDB database",
-      event.target.errorCode
-    );
+  indexedDb.database.onerror = (event) => {
+    console.log("Database error", event.target.errorCode);
+  };
+});
+
+indexedDb.request.onerror = (event) => {
+  console.error("Some error occurred:", event);
+};
+
+indexedDb.request.onupgradeneeded = (event) => {
+  indexedDb.database = event.target.result;
+  indexedDb.objectStore = indexedDb.database.createObjectStore("pdfFiles", {
+    autoIncrement: true,
+  });
+};
+
+const getDatabase = () => {
+  return new Promise((res) => {
+    if (indexedDb.database) return res(indexedDb.database);
+
+    indexedDb.request.addEventListener("success", (event) => {
+      console.log("getting database successful");
+      const { result } = event.target;
+      return res(result);
+    });
+  });
+};
+
+const addFile = (fileBlob) => {
+  const transaction = indexedDb.database.transaction("pdfFiles", "readwrite");
+  const query = transaction.objectStore("pdfFiles").put(fileBlob);
+
+  return new Promise((res, rej) => {
+    query.onerror = (event) => {
+      console.log(event.target.errorCode);
+      return rej(event);
+    };
+
+    query.onsuccess = (event) => {
+      console.log(event);
+      return res(event);
+    };
+
+    transaction.oncomplete = () => {
+      console.log("closing database");
+      indexedDb.database.close();
+    };
+  });
+};
+
+const removeFile = () => {
+  const transaction = indexedDb.database.transaction("pdfFiles", "readwrite");
+  const query = transaction.objectStore("pdfFiles").delete(1);
+
+  query.onerror = (event) => {
+    console.log(event.target.errorCode);
   };
 
-  // Interim solution for Google Chrome to create an objectStore. Will be deprecated
-  if (database.setVersion) {
-    if (database.version !== dbVersion) {
-      const setVersion = database.setVersion(dbVersion);
-      setVersion.onsuccess = function () {
-        createObjectStore(database);
-        getImageFile();
-      };
-    } else {
-      getImageFile();
-    }
-  } else {
-    getImageFile();
-  }
+  query.onsuccess = (event) => {
+    console.log(event);
+  };
+
+  transaction.oncomplete = () => {
+    indexedDb.database.close();
+  };
 };
 
-database.onupgradeneeded = (event) => {
-  const database = event.target.result;
-  const objectStore = database.createObjectStore("name", { keyPath });
+const getFile = async () => {
+  const database = await getDatabase();
+  const transaction = database.transaction("pdfFiles", "readwrite");
+  const query = transaction.objectStore("pdfFiles").get(1);
+
+  return new Promise((res, rej) => {
+    query.onerror = (event) => {
+      console.log(event.target.errorCode);
+      return rej(event);
+    };
+
+    query.onsuccess = (event) => {
+      console.log(event);
+      return res(query.result);
+    };
+
+    transaction.oncomplete = () => {
+      console.log("closing database");
+      database.close();
+    };
+  });
 };
+
+export { addFile, removeFile, getFile };
