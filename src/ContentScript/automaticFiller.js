@@ -1,7 +1,24 @@
 import { data } from "./cacheData.js";
+import { getFile } from "../indexedDB.js";
 
-const defaultFiller = (fields = []) => {
-  const allLabels = Array.from(document.getElementsByTagName("LABEL"));
+//iife below
+(async () => {})();
+
+const defaultFiller = async (fields = []) => {
+  inputFiller(fields);
+  const fileInput = document.querySelector("input[type='file']");
+  if (!fileInput) return;
+
+  const file = await getFile();
+
+  console.log("file", file);
+  // const dataTransfer = new DataTransfer();
+  // dataTransfer.items.add(file);
+  // fileInput.files = dataTransfer.files;
+};
+
+const inputFiller = (fields = []) => {
+  const allLabels = Array.from(document.querySelectorAll("LABEL, LEGEND"));
   allLabels.map((label) => {
     const { htmlFor, innerText } = label;
 
@@ -10,11 +27,13 @@ const defaultFiller = (fields = []) => {
         innerText.toLowerCase().includes(name.toLowerCase())
       ) || {};
 
-    const _input = htmlFor
-      ? document.getElementById(htmlFor)
-      : label.querySelector("input[type='text'],input[type='email']");
-
-    const input = _input || document.querySelector(`input[name="${htmlFor}"]`);
+    const input = htmlFor
+      ? document.getElementById(htmlFor) ||
+        document.querySelector(`input[name="${htmlFor}"]`)
+      : label?.querySelector("input[type='text'],input[type='email']") ||
+        label?.parentNode.querySelector(
+          "input[type='text'],input[type='email']"
+        );
 
     if (!value || !input) return null;
 
@@ -45,7 +64,7 @@ const defaultHandleMutation = (mutationList) => {
     if (!shouldUpdate) return;
 
     console.log("Filling forms..");
-    defaultFiller(data.fields);
+    return defaultFiller(data.fields);
   }, 300);
 };
 
