@@ -9,7 +9,6 @@ const config = {
 const handleMutation = (mutationList) => {
   clearTimeout(data.timeoutId);
   data.timeoutId = setTimeout(() => {
-    console.log(mutationList);
     const shouldUpdate = mutationList.some((mutationRecord) => {
       const { addedNodes } = mutationRecord;
       const [newNode] = addedNodes || [];
