@@ -4,14 +4,15 @@ const indexedDb = {
   objectStore: null,
 };
 
-let i = 0;
-
 indexedDb.request = indexedDB.open("pdfDatabase", 1);
 
 indexedDb.request.addEventListener("success", (event) => {
   console.log("Success creating/accessing IndexedDB database");
   const { result } = event.target;
   indexedDb.database = result;
+  indexedDb.database.onversionchange = () => {
+    indexedDb.database?.close();
+  };
 
   indexedDb.database.onerror = (event) => {
     console.log("Database error", event.target.errorCode);
@@ -41,9 +42,13 @@ const getDatabase = () => {
   });
 };
 
-const addFile = (fileBlob) => {
-  const transaction = indexedDb.database.transaction("pdfFiles", "readwrite");
-  const query = transaction.objectStore("pdfFiles").put(fileBlob);
+const addFile = async (fileBlob) => {
+  const database = indexedDb.database || (await getDatabase());
+  const transaction = database.transaction("pdfFiles", "readwrite");
+
+  console.log(fileBlob);
+
+  const query = transaction.objectStore("pdfFiles").put(fileBlob, 0);
 
   return new Promise((res, rej) => {
     query.onerror = (event) => {
@@ -55,16 +60,12 @@ const addFile = (fileBlob) => {
       console.log(event);
       return res(event);
     };
-
-    transaction.oncomplete = () => {
-      console.log("closing database");
-      indexedDb.database.close();
-    };
   });
 };
 
-const removeFile = () => {
-  const transaction = indexedDb.database.transaction("pdfFiles", "readwrite");
+const removeFile = async () => {
+  const database = indexedDb.database || (await getDatabase());
+  const transaction = database.transaction("pdfFiles", "readwrite");
   const query = transaction.objectStore("pdfFiles").delete(1);
 
   query.onerror = (event) => {
@@ -74,16 +75,12 @@ const removeFile = () => {
   query.onsuccess = (event) => {
     console.log(event);
   };
-
-  transaction.oncomplete = () => {
-    indexedDb.database.close();
-  };
 };
 
 const getFile = async () => {
   const database = await getDatabase();
   const transaction = database.transaction("pdfFiles", "readwrite");
-  const query = transaction.objectStore("pdfFiles").get(1);
+  const query = transaction.objectStore("pdfFiles").get(0);
 
   return new Promise((res, rej) => {
     query.onerror = (event) => {
@@ -93,12 +90,8 @@ const getFile = async () => {
 
     query.onsuccess = (event) => {
       console.log(event);
+      console.log("Result", query.result);
       return res(query.result);
-    };
-
-    transaction.oncomplete = () => {
-      console.log("closing database");
-      database.close();
     };
   });
 };
