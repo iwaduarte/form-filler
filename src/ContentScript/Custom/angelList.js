@@ -3,7 +3,7 @@ import { data } from "../cacheData.js";
 const config = {
   attributes: false,
   childList: true,
-  subtree: false,
+  subtree: true,
 };
 
 const handleMutation = (mutationList) => {
@@ -13,17 +13,20 @@ const handleMutation = (mutationList) => {
       const { target } = mutationRecord;
       return (
         target.tagName !== "TEXTAREA" &&
-        target.className === "route--Jobs Modal__open"
+        (target.className === "styles_motionContainer__0bu1f" ||
+          target.className.includes("ReactModal__Content"))
       );
     });
     if (!shouldUpdate) return;
-    console.log("filling textArea");
+    const textArea = document.querySelector(".styles_modal__MFCOh textarea");
+    if (!textArea) return;
     filler(data.fields);
-  }, 300);
+  }, 600);
 };
 
 const filler = (fields = []) => {
-  const [textArea] = document.getElementsByTagName("textarea");
+  console.log("Filling textArea");
+  const [textArea] = document.getElementsByTagName("textarea") || [];
 
   if (!textArea) return;
 
