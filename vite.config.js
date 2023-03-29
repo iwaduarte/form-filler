@@ -5,5 +5,13 @@ import manifest from "./manifest.js";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), webExtension({ manifest })],
+  plugins: [
+    react(),
+    webExtension({
+      manifest,
+      webAccessibleScripts: {
+        include: /\.([cem]?js|jsx|ts)$/,
+      },
+    }),
+  ],
 });

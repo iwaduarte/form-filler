@@ -5,13 +5,7 @@ const manifest = {
     scripts: ["src/Background/background.js", "src/Background/hot-reload.js"],
     persistent: false,
   },
-  content_scripts: [
-    {
-      js: ["src/ContentScript/main.jsx"],
-      run_at: "document_end",
-      matches: ["<all_urls>"],
-    },
-  ],
+
   options_ui: {
     page: "src/Options/index.html",
     open_in_tab: true,
@@ -21,7 +15,15 @@ const manifest = {
     default_title: "Form-Filler",
     default_popup: "src/Popup/index.html",
   },
-  permissions: ["activeTab", "tabs", "storage", "management", "<all_urls>"],
+  web_accessible_resources: ["src/ContentScript/main.jsx"],
+  permissions: [
+    "activeTab",
+    "tabs",
+    "storage",
+    "management",
+    "runtime",
+    "<all_urls>",
+  ],
 };
 
 export default {
