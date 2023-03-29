@@ -1,4 +1,5 @@
 const data = {
+  url: "",
   fields: {},
   whiteList: {
     "boards.greenhouse.io": true,
@@ -10,6 +11,7 @@ const data = {
   },
   isEnabled: false,
   timeoutId: 0,
+  file: null,
 };
 
 export { data };
