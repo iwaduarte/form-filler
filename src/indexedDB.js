@@ -35,7 +35,6 @@ const getDatabase = () => {
     if (indexedDb.database) return res(indexedDb.database);
 
     indexedDb.request.addEventListener("success", (event) => {
-      console.log("getting database successful");
       const { result } = event.target;
       return res(result);
     });
@@ -46,8 +45,6 @@ const addFile = async (fileBlob) => {
   const database = indexedDb.database || (await getDatabase());
   const transaction = database.transaction("pdfFiles", "readwrite");
 
-  console.log(fileBlob);
-
   const query = transaction.objectStore("pdfFiles").put(fileBlob, 0);
 
   return new Promise((res, rej) => {
@@ -57,7 +54,6 @@ const addFile = async (fileBlob) => {
     };
 
     query.onsuccess = (event) => {
-      console.log(event);
       return res(event);
     };
   });
@@ -88,9 +84,7 @@ const getFile = async () => {
       return rej(event);
     };
 
-    query.onsuccess = (event) => {
-      console.log(event);
-      console.log("Result", query.result);
+    query.onsuccess = () => {
       return res(query.result);
     };
   });
