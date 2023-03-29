@@ -1,8 +1,21 @@
 import React, { useEffect, useState } from "react";
 import trashSVG from "./assets/trash.svg";
+import arrowSVG from "./assets/arrow.svg";
 import { getFromStore, setStore } from "../storage.js";
 import { addFile, getFile } from "../indexedDB.js";
+import { fileToBase64 } from "../file.js";
 
+const { tabs } = chrome;
+
+const updateFileInput = (file) => {
+  tabs.query({ currentWindow: true, active: true }, function (tabArray) {
+    const tabId = tabArray[0].id;
+    tabs.sendMessage(tabId, {
+      action: "fill",
+      file,
+    });
+  });
+};
 const addProperty = async (data) => {
   const { name, value } = data || {};
   const storedItem = (await getFromStore()) || [];
@@ -20,13 +33,12 @@ const deleteProperty = async (index) => {
   return storedItem;
 };
 
-const file = getFile().then((file) => {});
-
 const Popup = () => {
   const [inputs, setInputs] = useState([]);
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [isEnabled, setIsEnabled] = useState(true);
+  const [file, setFile] = useState(true);
 
   const handleChange = async (e) => {
     const setInputValue = {
@@ -59,8 +71,15 @@ const Popup = () => {
 
     if (file.type !== "application/pdf" || file.size > 1e7) return;
     await addFile(file);
+    updateFileInput(await fileToBase64(file));
+    setFile(file);
   };
 
+  const saveFile = () => {
+    const link = document.getElementById("saveFile");
+    link.download = file?.name || "resume.pdf";
+    link.href = URL.createObjectURL(file);
+  };
   useEffect(() => {
     getFromStore(null).then((data) => {
       const { formFiller = [], isEnabled: _isEnabled = true } = data;
@@ -68,6 +87,17 @@ const Popup = () => {
       setInputs(formFiller);
     });
   }, [inputs.length]);
+
+  useEffect(() => {
+    getFile().then((_file) => {
+      if (!_file) return;
+      const fileInput = document.getElementById("fileInput");
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(_file);
+      fileInput.files = dataTransfer.files;
+      setFile(_file);
+    });
+  }, []);
 
   return (
     <div className=" py-6 px-5 md:px-10 bg-gray-100 shadow-md rounded-xl border text-gray-800 border-gray-400">
@@ -124,7 +154,12 @@ const Popup = () => {
       </div>
       <div className="mb-2">
         <span className="text-gray-800 text-sm font-bold ">Add PDF file:</span>
-        <input type="file" onChange={handleFile} />
+        <div className="flex items-center justify-between">
+          <input id="fileInput" type="file" onChange={handleFile} />
+          <a id="saveFile" onClick={saveFile} href="#">
+            <img src={arrowSVG} alt="Save" />
+          </a>
+        </div>
       </div>
       <div className="">
         <label className="block text-left" htmlFor="name">

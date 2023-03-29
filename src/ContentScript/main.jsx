@@ -7,9 +7,11 @@ import { defaultFiller, observeMutations } from "./automaticFiller.js";
 import * as angelList from "./Custom/angelList.js";
 import * as yCombinator from "./Custom/yCombinator.js";
 import { data } from "./cacheData.js";
+import { base64ToBlob } from "../file.js";
 
 const siteConfiguration = {
   "angel.co": angelList,
+  "wellfound.com": angelList,
   "workatastartup.com": yCombinator,
 };
 
@@ -49,8 +51,12 @@ const createReactRoot = (element) => {
 const startApplication = async () => {
   const shadow = createShadowElement();
   const reactRoot = createReactRoot(shadow);
+  const file = await base64ToBlob(pdfFile, "application/pdf");
+
+  data.file = file;
 
   const url = document.location.hostname.replace("www.", "");
+  data.url = url;
   const { config, handleMutation, filler, watchSelector } =
     siteConfiguration[url] || {};
   const fillForms = filler || defaultFiller;
@@ -74,7 +80,7 @@ const startApplication = async () => {
     startOnKey(evt, fillForms, reactRoot, component)
   );
 
-  syncStore((changes) => {
+  syncStore(async (changes) => {
     const { formFiller, isEnabled: _isEnabled = true, whiteList } = changes;
     const { newValue } = formFiller || {};
     const fields = newValue || data.fields;
@@ -85,8 +91,18 @@ const startApplication = async () => {
     _isEnabled && fillForms(fields);
   });
 
+  chrome.runtime.onMessage.addListener(async function (message) {
+    const { action, file } = message;
+    if (action === "fill") {
+      const fileData = await base64ToBlob(JSON.parse(file));
+      data.file = fileData;
+      fillForms(data.fields, fileData);
+    }
+  });
+
   if (!data.whiteList[url] || !isEnabled) return;
-  fillForms(data.fields);
+
+  fillForms(data.fields, file);
 
   observeMutations({ config, handleMutation, watchSelector });
 
