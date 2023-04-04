@@ -1,20 +1,55 @@
 import { data } from "./cacheData.js";
-import { getFile } from "../indexedDB.js";
+import { autoFillerSelect } from "./Custom/greenHouse.js";
 
-//iife below
-(async () => {})();
+const autoFiller = {
+  "boards.greenhouse.io": autoFillerSelect,
+};
 
-const defaultFiller = async (fields = []) => {
+const defaultFiller = (fields = [], file = data.file) => {
   inputFiller(fields);
+
   const fileInput = document.querySelector("input[type='file']");
-  if (!fileInput) return;
 
-  const file = await getFile();
+  if (!fileInput || !data.file) return;
 
-  console.log("file", file);
-  // const dataTransfer = new DataTransfer();
-  // dataTransfer.items.add(file);
-  // fileInput.files = dataTransfer.files;
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  fileInput.files = dataTransfer.files;
+
+  const event = new Event("change", {
+    bubbles: true,
+    cancelable: false,
+  });
+
+  fileInput.dispatchEvent(event);
+};
+
+const matchSelectValue = (desiredValue, selectElem) => {
+  if (!desiredValue || !selectElem) return null;
+  const { options } = selectElem;
+  const { value } =
+    Array.from(options).find((option) => {
+      if (option.innerText === desiredValue) {
+        option.selected = true;
+        return true;
+      }
+    }) || {};
+
+  return value;
+};
+
+const updateElementValue = (element, value) => {
+  element.value = value;
+  element.innerHTML = value;
+  element.innerText = value;
+
+  try {
+    element.dispatchEvent(
+      new Event("change", { bubbles: true, cancelable: false })
+    );
+  } catch (error) {
+    console.log("error", error);
+  }
 };
 
 const inputFiller = (fields = []) => {
@@ -27,53 +62,63 @@ const inputFiller = (fields = []) => {
         innerText.toLowerCase().includes(name.toLowerCase())
       ) || {};
 
+    if (!value) return null;
+
     const input = htmlFor
       ? document.getElementById(htmlFor) ||
         document.querySelector(`input[name="${htmlFor}"]`)
-      : label?.querySelector("input[type='text'],input[type='email']") ||
+      : label?.querySelector(
+          "input[type='text'],input[type='email'],textarea"
+        ) ||
         label?.parentNode.querySelector(
-          "input[type='text'],input[type='email']"
+          "input[type='text'],input[type='email'],textarea"
         );
 
-    if (!value || !input) return null;
+    const select = label?.querySelector("select");
+    const indexSelect = select && matchSelectValue(value, select);
 
-    input.value = value;
-    input.innerHTML = value;
-    const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-      window.HTMLInputElement.prototype,
-      "value"
-    ).set;
-    nativeInputValueSetter.call(input, value);
-    input.dispatchEvent(new Event("change", { bubbles: true }));
+    if (!input && !select) return null;
 
-    return input;
+    input && updateElementValue(input, value);
+
+    if (select && indexSelect && autoFiller[data.url]) {
+      autoFiller?.[data.url]?.(select, value);
+    }
+
+    return true;
   });
 };
+
 const defaultHandleMutation = (mutationList) => {
+  if (data.isEnabled === false) return;
+
   clearTimeout(data.timeoutId);
   data.timeoutId = setTimeout(() => {
-    const shouldUpdate = mutationList.some((mutationRecord) => {
+    const shouldNotUpdate = mutationList.some((mutationRecord) => {
       const { addedNodes, target } = mutationRecord;
       return (
-        target.tagName !== "INPUT" ||
+        target.tagName === "INPUT" ||
+        target.nodeName === "INPUT" ||
+        target.nodeName === "SPAN" ||
         Array.from(addedNodes).filter(({ nodeName }) => {
-          return nodeName !== "#text";
+          return nodeName === "#text" || nodeName === "INPUT";
         }).length
       );
     });
-    if (!shouldUpdate) return;
+    if (shouldNotUpdate) return;
 
-    console.log("Filling forms..");
     return defaultFiller(data.fields);
   }, 300);
 };
 
 const observeMutations = ({ config, handleMutation, watchSelector = "" }) => {
+  if (data.isEnabled === false) return;
+
   const watchSelectors = ["#root", "#__next", "body"];
   watchSelector && watchSelectors.unshift(watchSelector);
-  const reactRoot = document.querySelector(watchSelectors.join(","));
-  console.log("reactRoot", reactRoot);
-  if (reactRoot) {
+  const element = document.querySelector(watchSelectors.join(","));
+  console.log("[element watched]", element);
+  if (element) {
     const observer = new MutationObserver(
       handleMutation || defaultHandleMutation
     );
@@ -83,7 +128,11 @@ const observeMutations = ({ config, handleMutation, watchSelector = "" }) => {
       subtree: true,
     };
 
-    observer.observe(reactRoot, _config);
+    observer.observe(element, _config);
+
+    if (element.tagName === "BODY" && !handleMutation) {
+      defaultFiller(data.fields);
+    }
 
     return observer;
   }
