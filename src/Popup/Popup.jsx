@@ -5,7 +5,7 @@ import { getFromStore, setStore } from "../storage.js";
 import { addFile, getFile } from "../indexedDB.js";
 import { fileToBase64 } from "../file.js";
 
-const { tabs } = chrome;
+const { tabs, runtime } = chrome;
 
 const updateFileInput = (file) => {
   tabs.query({ currentWindow: true, active: true }, function (tabArray) {
@@ -80,6 +80,9 @@ const Popup = () => {
     link.download = file?.name || "resume.pdf";
     link.href = URL.createObjectURL(file);
   };
+
+  const handleOptionsPage = () => runtime.openOptionsPage();
+
   useEffect(() => {
     getFromStore(null).then((data) => {
       const { formFiller = [], isEnabled: _isEnabled = true } = data;
@@ -102,9 +105,7 @@ const Popup = () => {
   return (
     <div className=" py-6 px-5 md:px-10 bg-gray-100 shadow-md rounded-xl border text-gray-800 border-gray-400">
       <div className="flex justify-between mb-4">
-        <h1 className="text-gray-800 font-lg font-bold tracking-normal leading-tight mb-4">
-          Form-Filler
-        </h1>
+        <h1 className="text-gray-800 font-lg font-bold tracking-normal leading-tight mb-4">Form-Filler</h1>
 
         <div className="flex items-center">
           <span className="mr-1">OFF</span>
@@ -126,20 +127,13 @@ const Popup = () => {
         </div>
       </div>
       <div className="properties mb-1 py-3 border-b border-[#ead6d6] border-sky-500">
-        <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-4">
-          Properties
-        </h1>
-        <ul className="flex flex-col self-center h-[38vh] overflow-y-auto">
+        <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-4">Properties</h1>
+        <ul className="flex flex-col self-center max-h-40 overflow-y-auto">
           {inputs?.map((input, index) => {
             const { name, value } = input;
             return (
-              <li
-                key={index}
-                className="flex flex-wrap justify-between py-2 border-y border-gray-300"
-              >
-                <div className="mr-2  text-left basis-24  font-bold ">
-                  {name}:
-                </div>
+              <li key={index} className="flex flex-wrap justify-between py-2 border-y border-gray-300">
+                <div className="mr-2  text-left basis-24  font-bold ">{name}:</div>
                 <div className="basis-48 shrink-1 text-left"> {value}</div>
                 <div
                   className="w-[18px] shrink-1 text-right grow-0 cursor-pointer text-gray-200 hover:scale-105"
@@ -168,15 +162,14 @@ const Popup = () => {
             id="name"
             value={name}
             onChange={handleChange}
-            className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
+            className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full
+             h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
             placeholder="(i.e Email, First Name, Last Name)"
           />
         </label>
 
         <label className="block text-left" htmlFor="name">
-          <span className="text-gray-800 text-sm font-bold leading-tight tracking-normal">
-            Field Value:
-          </span>
+          <span className="text-gray-800 text-sm font-bold leading-tight tracking-normal">Field Value:</span>
           <input
             id="value"
             value={value}
@@ -200,6 +193,12 @@ const Popup = () => {
           Clear
         </button>
       </div>
+      <a
+        className=" hover:bg-indigo-600 hover:text-white text-stone-600 font-bold py-1 px-2 rounded cursor-pointer absolute bottom-0 right-0 mt-2 mr-2"
+        onClick={handleOptionsPage}
+      >
+        Go to Options
+      </a>
     </div>
   );
 };
