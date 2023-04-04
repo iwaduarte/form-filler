@@ -8,6 +8,7 @@ import * as angelList from "./Custom/angelList.js";
 import * as yCombinator from "./Custom/yCombinator.js";
 import { data } from "./cacheData.js";
 import { base64ToBlob } from "../file.js";
+import HotkeyCommands from "./HotkeyCommands.jsx";
 
 const siteConfiguration = {
   "angel.co": angelList,
@@ -15,20 +16,31 @@ const siteConfiguration = {
   "workatastartup.com": yCombinator,
 };
 
-const startOnKey = async (evt, fillForms, reactRoot, component) => {
+let _pdfFile = null;
+try {
+  _pdfFile = pdfFile;
+} catch (e) {}
+
+const startOnKey = async (evt, fillForms) => {
   const url = document.location.hostname.replace("www.", "");
 
   if (evt.ctrlKey && evt.altKey && evt.key === "f") {
     if (!data.isEnabled) return;
     console.log(url);
     fillForms(data.fields);
-    reactRoot.render(component);
   }
 
   if (evt.ctrlKey && evt.altKey && evt.key === "a") {
     const storedItem = (await getFromStore("whiteList")) || [];
     const newData = { ...storedItem, [url]: true };
-    await setStore(newData);
+    await setStore(newData, "whiteList");
+    data.whiteList = { ...data.whiteList, ...newData };
+  }
+
+  if (evt.ctrlKey && evt.altKey && evt.key === "r") {
+    const storedItem = (await getFromStore("whiteList")) || [];
+    const newData = { ...storedItem, [url]: false };
+    await setStore(newData, "whiteList");
     data.whiteList = { ...data.whiteList, ...newData };
   }
 };
@@ -48,12 +60,10 @@ const createReactRoot = (element) => {
   return ReactDOM.createRoot(element);
 };
 
-const startApplication = async () => {
+const startApplication = async (pdfFile) => {
   const shadow = createShadowElement();
   const reactRoot = createReactRoot(shadow);
-  const file = await base64ToBlob(pdfFile, "application/pdf");
-
-  data.file = file;
+  data.file = pdfFile ? await base64ToBlob(pdfFile, "application/pdf") : null;
 
   const url = document.location.hostname.replace("www.", "");
   data.url = url;
@@ -72,23 +82,32 @@ const startApplication = async () => {
 
   const component = (
     <React.StrictMode>
-      <Context fields={data.fields} isEnabled={data.isEnabled} />
+      <HotkeyCommands />
+      <Context
+        fields={data.fields}
+        isEnabled={data.isEnabled}
+        whiteListed={data.whiteList[url]}
+        url={url}
+      />
     </React.StrictMode>
   );
 
-  document.addEventListener("keydown", (evt) =>
-    startOnKey(evt, fillForms, reactRoot, component)
-  );
+  document.addEventListener("keydown", (evt) => startOnKey(evt, fillForms));
 
   syncStore(async (changes) => {
-    const { formFiller, isEnabled: _isEnabled = true, whiteList } = changes;
-    const { newValue } = formFiller || {};
-    const fields = newValue || data.fields;
-    data.fields = fields;
-    data.whiteList = { ...data.whiteList, ...whiteList };
-    data.isEnabled = isEnabled;
+    const {
+      formFiller,
+      isEnabled: isEnabledFromSync = true,
+      whiteList,
+    } = changes;
 
-    _isEnabled && fillForms(fields);
+    const { newValue: newFormValues } = formFiller || {};
+
+    data.fields = newFormValues || data.fields;
+    data.isEnabled = isEnabledFromSync?.newValue || data.isEnabled;
+    data.whiteList = { ...data.whiteList, ...whiteList?.newValue };
+
+    data.isEnabled && fillForms(data.fields);
   });
 
   chrome.runtime.onMessage.addListener(async function (message) {
@@ -100,13 +119,11 @@ const startApplication = async () => {
     }
   });
 
+  reactRoot.render(component);
+
   if (!data.whiteList[url] || !isEnabled) return;
 
-  fillForms(data.fields, file);
-
   observeMutations({ config, handleMutation, watchSelector });
-
-  reactRoot.render(component);
 };
 
-startApplication().then();
+startApplication(_pdfFile).then();
