@@ -1,11 +1,16 @@
 import React, { useEffect, useState } from "react";
+import style from "./Popup.module.css";
 import trashSVG from "./assets/trash.svg";
 import arrowSVG from "./assets/arrow.svg";
+import formFiller from "./assets/form-filler.png";
+
 import { addProperty, deleteProperty, getFromStore, setStore } from "../storage.js";
 import { addFile, getFile } from "../indexedDB.js";
 import { fileToBase64, updateFileInput } from "../file.js";
 
 const { runtime } = chrome;
+
+const { logo, title, colorScale, inputLabel, customFileLabel } = style;
 
 const Popup = () => {
   const [inputs, setInputs] = useState([]);
@@ -77,10 +82,14 @@ const Popup = () => {
   }, []);
 
   return (
-    <div className=" py-6 px-5 md:px-10 bg-gray-100 shadow-md rounded-xl border text-gray-800 border-gray-400">
-      <div className="flex justify-between mb-4">
-        <h1 className="text-gray-800 font-lg font-bold tracking-normal leading-tight mb-4">Form-Filler</h1>
-
+    <div
+      className={`py-6 px-5 md:px-10 bg-gray-100 shadow-md rounded-xl border text-gray-800 border-gray-400 ${colorScale}`}
+    >
+      <div className="flex justify-between mb-2">
+        <h1 className={logo}>
+          <img alt="logo" src={formFiller} />
+          orm-Filler
+        </h1>
         <div className="flex items-center">
           <span className="mr-1">OFF</span>
           <div className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
@@ -101,7 +110,7 @@ const Popup = () => {
         </div>
       </div>
       <div className="properties mb-1 py-3 border-b border-[#ead6d6] border-sky-500">
-        <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-4">Properties</h1>
+        <h1 className={`text-gray-800 font-bold ${title} mb-4`}>Properties</h1>
         <ul className="flex flex-col self-center max-h-40 overflow-y-auto">
           {inputs?.map((input, index) => {
             const { name, value } = input;
@@ -120,35 +129,38 @@ const Popup = () => {
           })}
         </ul>
       </div>
-      <div className="mb-2">
-        <span className="text-gray-800 text-sm font-bold ">Add PDF file:</span>
-        <div className="flex items-center justify-between">
-          <input id="fileInput" type="file" onChange={handleFile} />
+      <div className="my-4">
+        <span className={`text-gray-800  font-bold ${title} mb-4`}>Add a PDF file:</span>
+        <div className="flex gap-3 items-center justify-between">
+          <input id="fileInput" type="file" className={inputLabel} onChange={handleFile} />
+          <label htmlFor="fileInput" className={customFileLabel}></label>
+          <div className="overflow-hidden whitespace-nowrap overflow-ellipsis">{file?.name}</div>
+
           <a id="saveFile" onClick={saveFile} href="#">
             <img src={arrowSVG} alt="Save" />
           </a>
         </div>
       </div>
-      <div className="">
-        <label className="block text-left" htmlFor="name">
-          <span className="text-gray-800 text-sm font-bold "> Field Name:</span>
+      <div className="mb-6">
+        <label className="block text-left mb-2" htmlFor="name">
+          <span className="text-gray-800 text-xs font-bold "> Field Name:</span>
           <input
             id="name"
             value={name}
             onChange={handleChange}
-            className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full
+            className=" text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full
              h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
             placeholder="(i.e Email, First Name, Last Name)"
           />
         </label>
 
-        <label className="block text-left" htmlFor="name">
-          <span className="text-gray-800 text-sm font-bold leading-tight tracking-normal">Field Value:</span>
+        <label className="block text-left mb-2" htmlFor="name">
+          <span className="text-gray-800 text-xs font-bold leading-tight tracking-normal">Field Value:</span>
           <input
             id="value"
             value={value}
             onChange={handleChange}
-            className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
+            className="text-gray-600 focus:outline-none focus:border focus:border-indigo-700  font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
             placeholder="(i.e Email, First Name, Last Name)"
           />
         </label>
