@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import css from "./content.css";
 import Context from "./Context.jsx";
-import { getFromStore, setStore, syncStore } from "../storage.js";
+import { addWhiteList, deleteWhiteList, getFromStore, syncStore } from "../storage.js";
 import { defaultFiller, observeMutations } from "./automaticFiller.js";
 import * as angelList from "./Custom/angelList.js";
 import * as yCombinator from "./Custom/yCombinator.js";
@@ -31,16 +31,12 @@ const startOnKey = async (evt, fillForms) => {
   }
 
   if (evt.ctrlKey && evt.altKey && evt.key === "a") {
-    const storedItem = (await getFromStore("whiteList")) || [];
-    const newData = { ...storedItem, [url]: true };
-    await setStore(newData, "whiteList");
+    const newData = await addWhiteList(url);
     data.whiteList = { ...data.whiteList, ...newData };
   }
 
   if (evt.ctrlKey && evt.altKey && evt.key === "r") {
-    const storedItem = (await getFromStore("whiteList")) || [];
-    const newData = { ...storedItem, [url]: false };
-    await setStore(newData, "whiteList");
+    const newData = await deleteWhiteList(url);
     data.whiteList = { ...data.whiteList, ...newData };
   }
 };
@@ -67,14 +63,9 @@ const startApplication = async (pdfFile) => {
 
   const url = document.location.hostname.replace("www.", "");
   data.url = url;
-  const { config, handleMutation, filler, watchSelector } =
-    siteConfiguration[url] || {};
+  const { config, handleMutation, filler, watchSelector } = siteConfiguration[url] || {};
   const fillForms = filler || defaultFiller;
-  const {
-    isEnabled = false,
-    formFiller = [],
-    whiteList = {},
-  } = (await getFromStore(null)) || {};
+  const { isEnabled = false, formFiller = [], whiteList = {} } = (await getFromStore(null)) || {};
 
   data.whiteList = { ...data.whiteList, ...whiteList };
   data.fields = formFiller;
@@ -83,23 +74,14 @@ const startApplication = async (pdfFile) => {
   const component = (
     <React.StrictMode>
       <HotkeyCommands />
-      <Context
-        fields={data.fields}
-        isEnabled={data.isEnabled}
-        whiteListed={data.whiteList[url]}
-        url={url}
-      />
+      <Context fields={data.fields} isEnabled={data.isEnabled} whiteListed={data.whiteList[url]} url={url} />
     </React.StrictMode>
   );
 
   document.addEventListener("keydown", (evt) => startOnKey(evt, fillForms));
 
   syncStore(async (changes) => {
-    const {
-      formFiller,
-      isEnabled: isEnabledFromSync = true,
-      whiteList,
-    } = changes;
+    const { formFiller, isEnabled: isEnabledFromSync = true, whiteList } = changes;
 
     const { newValue: newFormValues } = formFiller || {};
 

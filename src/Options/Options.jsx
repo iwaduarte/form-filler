@@ -1,40 +1,7 @@
 import React, { useEffect, useState } from "react";
 import trashSVG from "./assets/trash.svg";
-import { getFromStore, setStore } from "../storage.js";
+import { addProperty, deleteProperty, getFromStore, setStore } from "../storage.js";
 import { data } from "../ContentScript/cacheData.js";
-
-const addProperty = async (data) => {
-  const { name, value } = data || {};
-  const storedItem = (await getFromStore("formFiller")) || [];
-  if (!name || !value) return storedItem;
-  const newData = [...storedItem, data];
-  await setStore(newData);
-  return newData;
-};
-
-const deleteProperty = async (index) => {
-  const storedItem = (await getFromStore("formFiller")) || [];
-  storedItem.splice(index, 1);
-  await setStore(storedItem);
-  return storedItem;
-};
-
-const addWhiteList = async (data) => {
-  const { name, value } = data || {};
-  const storedItem = (await getFromStore("whiteList")) || [];
-  if (!name || !value) return storedItem;
-  const newData = [...storedItem, data];
-  await setStore(newData);
-  return newData;
-};
-const deleteWhiteList = async (data) => {
-  const { name, value } = data || {};
-  const storedItem = (await getFromStore("whiteList")) || [];
-  if (!name || !value) return storedItem;
-  const newData = [...storedItem, data];
-  await setStore(newData);
-  return newData;
-};
 
 const Options = () => {
   const [inputs, setInputs] = useState([]);
@@ -42,7 +9,7 @@ const Options = () => {
   const [value, setValue] = useState("");
   const [isEnabled, setIsEnabled] = useState(true);
   const [whiteListItem, setWhiteListItem] = useState("");
-  const [whiteList, setWhiteList] = useState(data.whiteList);
+  const [whiteList] = useState(data.whiteList);
 
   const handleChange = async (e) => {
     const setInputValue = {
@@ -74,14 +41,13 @@ const Options = () => {
     } = e;
     const [file] = files;
 
-    if (file.type !== "pdf") return;
-    console.log("e", file);
-    console.log(typeof file);
+    if (file.type !== "pdf") return false;
   };
 
   useEffect(() => {
     getFromStore(null).then((data) => {
       const { formFiller = [], isEnabled: _isEnabled = true } = data;
+
       setIsEnabled(_isEnabled);
       setInputs(formFiller);
     });
@@ -90,9 +56,7 @@ const Options = () => {
   return (
     <div className=" py-6 px-5 md:px-10 bg-gray-100 shadow-md border text-gray-800 border-gray-400">
       <div className="flex justify-between mb-4">
-        <h1 className="text-gray-800 font-lg font-bold tracking-normal leading-tight mb-4">
-          Form Filler Options
-        </h1>
+        <h1 className="text-gray-800 font-lg font-bold tracking-normal leading-tight mb-4">Form Filler Options</h1>
 
         <div className="flex items-center">
           <span className="mr-1">OFF</span>
@@ -116,10 +80,7 @@ const Options = () => {
       <div>
         <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-2">
           White List
-          <small className="font-normal">
-            {" "}
-            (sites allowed to execute the extension)
-          </small>
+          <small className="font-normal"> (sites allowed to execute the extension)</small>
         </h1>
 
         <ul className="flex mb-2">
@@ -159,20 +120,13 @@ const Options = () => {
       <div> Automatic Fill </div>
 
       <div className="properties mb-1 py-3 border-b border-[#ead6d6] border-sky-500">
-        <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-4">
-          Properties
-        </h1>
+        <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-4">Properties</h1>
         <ul className="flex flex-col self-center h-[38vh] overflow-y-auto">
           {inputs?.map((input, index) => {
             const { name, value } = input;
             return (
-              <li
-                key={index}
-                className="flex flex-wrap justify-between py-2 border-y border-gray-300"
-              >
-                <div className="mr-2  text-left basis-24  font-bold ">
-                  {name}:
-                </div>
+              <li key={index} className="flex flex-wrap justify-between py-2 border-y border-gray-300">
+                <div className="mr-2  text-left basis-24  font-bold ">{name}:</div>
                 <div className="basis-48 shrink-1 text-left"> {value}</div>
                 <div
                   className="w-[18px] shrink-1 text-right grow-0 cursor-pointer text-gray-200 hover:scale-105"
@@ -202,9 +156,7 @@ const Options = () => {
         </label>
 
         <label className="block text-left" htmlFor="name">
-          <span className="text-gray-800 text-sm font-bold leading-tight tracking-normal">
-            Field Value:
-          </span>
+          <span className="text-gray-800 text-sm font-bold leading-tight tracking-normal">Field Value:</span>
           <input
             id="value"
             value={value}

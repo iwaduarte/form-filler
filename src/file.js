@@ -1,3 +1,5 @@
+const { tabs } = chrome;
+
 const fileToBase64 = (file) => {
   if (!file) return null;
   const reader = new FileReader();
@@ -24,4 +26,14 @@ const base64ToBlob = async (fileObject, mime) => {
   });
 };
 
-export { fileToBase64, base64ToBlob };
+const updateFileInput = (file) => {
+  tabs.query({ currentWindow: true, active: true }, function (tabArray) {
+    const tabId = tabArray[0].id;
+    tabs.sendMessage(tabId, {
+      action: "fill",
+      file,
+    });
+  });
+};
+
+export { fileToBase64, base64ToBlob, updateFileInput };

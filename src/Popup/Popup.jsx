@@ -1,37 +1,11 @@
 import React, { useEffect, useState } from "react";
 import trashSVG from "./assets/trash.svg";
 import arrowSVG from "./assets/arrow.svg";
-import { getFromStore, setStore } from "../storage.js";
+import { addProperty, deleteProperty, getFromStore, setStore } from "../storage.js";
 import { addFile, getFile } from "../indexedDB.js";
-import { fileToBase64 } from "../file.js";
+import { fileToBase64, updateFileInput } from "../file.js";
 
-const { tabs, runtime } = chrome;
-
-const updateFileInput = (file) => {
-  tabs.query({ currentWindow: true, active: true }, function (tabArray) {
-    const tabId = tabArray[0].id;
-    tabs.sendMessage(tabId, {
-      action: "fill",
-      file,
-    });
-  });
-};
-const addProperty = async (data) => {
-  const { name, value } = data || {};
-  const storedItem = (await getFromStore()) || [];
-  if (!name || !value) return storedItem;
-  const newData = [...storedItem, data];
-  await setStore(newData);
-  return newData;
-};
-
-const deleteProperty = async (index) => {
-  const storedItem = (await getFromStore()) || [];
-  storedItem.splice(index, 1);
-  await setStore(storedItem);
-
-  return storedItem;
-};
+const { runtime } = chrome;
 
 const Popup = () => {
   const [inputs, setInputs] = useState([]);
