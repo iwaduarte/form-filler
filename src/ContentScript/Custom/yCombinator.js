@@ -7,12 +7,13 @@ const config = {
 };
 
 const handleMutation = (mutationList) => {
+  console.log(mutationList);
   clearTimeout(data.timeoutId);
   data.timeoutId = setTimeout(() => {
     const shouldUpdate = mutationList.some((mutationRecord) => {
       const { addedNodes } = mutationRecord;
       const [newNode] = addedNodes || [];
-      return newNode.id === "headlessui-portal-root";
+      return newNode?.id === "headlessui-portal-root";
     });
     if (!shouldUpdate) return;
     console.log("filling textArea");
@@ -21,7 +22,7 @@ const handleMutation = (mutationList) => {
 };
 
 const filler = (fields = []) => {
-  const modal = document.getElementById("headlessui-dialog-panel-5");
+  const modal = document.querySelector('[id^="headlessui-dialog-panel"]');
   const [textArea] = document.getElementsByTagName("textarea");
 
   const modalTitle = modal?.querySelector("div").innerText;
