@@ -1,0 +1,9 @@
+.checkBulletPoint::before {
+    content: '✔';
+    display: inline-block;
+    width: 1em;
+    margin-left: -1.25em;
+    margin-right: 0.25em;
+    color: #10b981; /* Change this to your desired checkmark color */
+    font-weight: bold;
+}
