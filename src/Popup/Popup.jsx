@@ -10,14 +10,14 @@ import { fileToBase64, updateFileInput } from "../file.js";
 
 const { runtime } = chrome;
 
-const { logo, title, colorScale, inputLabel, customFileLabel } = style;
+const { inputLabel, customFileLabel } = style;
 
 const Popup = () => {
   const [inputs, setInputs] = useState([]);
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
   const [isEnabled, setIsEnabled] = useState(true);
-  const [file, setFile] = useState(true);
+  const [file, setFile] = useState(null);
 
   const handleChange = async (e) => {
     const setInputValue = {
@@ -82,12 +82,10 @@ const Popup = () => {
   }, []);
 
   return (
-    <div
-      className={`py-6 px-5 md:px-10 bg-gray-100 shadow-md rounded-xl border text-gray-800 border-gray-400 ${colorScale}`}
-    >
+    <div className="py-6 px-5 md:px-10 bg-gray-100 shadow-md text-gray-800 border-gray-400 bg-custom-gradient">
       <div className="flex justify-between mb-2">
-        <h1 className={logo}>
-          <img alt="logo" src={formFiller} />
+        <h1 className="text-[32px] font-bold text-gray-700 inline">
+          <img className="w-8 h-8 mr-[-6px] inline-block" alt="logo" src={formFiller} />
           orm-Filler
         </h1>
         <div className="flex items-center">
@@ -109,8 +107,8 @@ const Popup = () => {
           <span className="ml-1">ON</span>
         </div>
       </div>
-      <div className="properties mb-1 py-3 border-b border-[#ead6d6] border-sky-500">
-        <h1 className={`text-gray-800 font-bold ${title} mb-4`}>Properties</h1>
+      <div className="properties mb-1 py-2 border-b border-[#ead6d6] border-sky-500">
+        <h1 className={`text-gray-800 font-bold text-xl  mb-4`}>Properties</h1>
         <ul className="flex flex-col self-center max-h-40 overflow-y-auto">
           {inputs?.map((input, index) => {
             const { name, value } = input;
@@ -130,10 +128,12 @@ const Popup = () => {
         </ul>
       </div>
       <div className="my-4">
-        <span className={`text-gray-800  font-bold ${title} mb-4`}>Add a PDF file:</span>
+        <span className={`text-gray-800  font-bold text-xl mb-4`}>Add a PDF file</span>
         <div className="flex gap-3 items-center justify-between">
           <input id="fileInput" type="file" className={inputLabel} onChange={handleFile} />
-          <label htmlFor="fileInput" className={customFileLabel}></label>
+          <label htmlFor="fileInput" className={customFileLabel}>
+            {file ? "Change" : "Choose"} file
+          </label>
           <div className="overflow-hidden whitespace-nowrap overflow-ellipsis">{file?.name}</div>
 
           <a id="saveFile" onClick={saveFile} href="#">
