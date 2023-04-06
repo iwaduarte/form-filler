@@ -24,18 +24,20 @@ try {
 const startOnKey = async (evt, fillForms) => {
   const url = document.location.hostname.replace("www.", "");
 
-  if (evt.ctrlKey && evt.altKey && evt.key === "f") {
+  const modifier = evt.ctrlKey || evt.metaKey;
+
+  if (modifier && evt.altKey && evt.key === "f") {
     if (!data.isEnabled) return;
     console.log(url);
     fillForms(data.fields);
   }
 
-  if (evt.ctrlKey && evt.altKey && evt.key === "a") {
+  if (modifier && evt.altKey && evt.key === "a") {
     const newData = await addWhiteList(url);
     data.whiteList = { ...data.whiteList, ...newData };
   }
 
-  if (evt.ctrlKey && evt.altKey && evt.key === "r") {
+  if (modifier && evt.altKey && evt.key === "r") {
     const newData = await deleteWhiteList(url);
     data.whiteList = { ...data.whiteList, ...newData };
   }

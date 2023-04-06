@@ -8,17 +8,19 @@ const HotkeyCommands = () => {
   const toggleOverlay = (event) => {
     if (!data.isEnabled) return;
 
+    const modifier = event.ctrlKey || event.metaKey;
+
     clearTimeout(data.timeoutToggle);
 
-    if (event.ctrlKey && event.altKey && event.key === "f") {
+    if (modifier && event.altKey && event.key === "f") {
       setVisible(true);
       setPhrase("Ctrl + Alt + F  ( Fill )");
     }
-    if (event.ctrlKey && event.altKey && event.key === "a") {
+    if (modifier && event.altKey && event.key === "a") {
       setVisible(true);
       setPhrase("Ctrl + Alt + A  ( Add to whitelist )");
     }
-    if (event.ctrlKey && event.altKey && event.key === "r") {
+    if (modifier && event.altKey && event.key === "r") {
       setVisible(true);
       setPhrase("Ctrl + Alt + R  ( Remove from whitelist )");
     }
@@ -38,9 +40,7 @@ const HotkeyCommands = () => {
   return visible ? (
     <div className="fixed bottom-0 left-0 w-full z-50">
       <div className="flex justify-center items-center  bg-black bg-opacity-30">
-        <span className="text-white text-2xl py-2 m-0 p-0 uppercase">
-          {phrase}
-        </span>
+        <span className="text-white text-2xl py-2 m-0 p-0 uppercase">{phrase}</span>
       </div>
     </div>
   ) : null;
