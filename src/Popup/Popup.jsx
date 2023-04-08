@@ -1,16 +1,13 @@
 import React, { useEffect, useState } from "react";
-import style from "./Popup.module.css";
 import trashSVG from "./assets/trash.svg";
 import arrowSVG from "./assets/arrow.svg";
 import formFiller from "./assets/form-filler.png";
 
-import { addProperty, deleteProperty, getFromStore, setStore } from "../storage.js";
+import { addProperty, deleteProperty, getFromStore, setStore, syncStore } from "../storage.js";
 import { addFile, getFile } from "../indexedDB.js";
-import { fileToBase64, updateFileInput } from "../file.js";
+import { fileToBase64, saveFile, updateFileInput } from "../file.js";
 
 const { runtime } = chrome;
-
-const { inputLabel, customFileLabel } = style;
 
 const Popup = () => {
   const [inputs, setInputs] = useState([]);
@@ -18,6 +15,7 @@ const Popup = () => {
   const [value, setValue] = useState("");
   const [isEnabled, setIsEnabled] = useState(true);
   const [file, setFile] = useState(null);
+  const [sync, setSync] = useState(false);
 
   const handleChange = async (e) => {
     const setInputValue = {
@@ -50,14 +48,9 @@ const Popup = () => {
 
     if (file.type !== "application/pdf" || file.size > 1e7) return;
     await addFile(file);
+    await setStore(file.name, "file");
     updateFileInput(await fileToBase64(file));
     setFile(file);
-  };
-
-  const saveFile = () => {
-    const link = document.getElementById("saveFile");
-    link.download = file?.name || "resume.pdf";
-    link.href = URL.createObjectURL(file);
   };
 
   const handleOptionsPage = () => runtime.openOptionsPage();
@@ -68,16 +61,24 @@ const Popup = () => {
       setIsEnabled(_isEnabled);
       setInputs(formFiller);
     });
-  }, [inputs.length]);
+  }, [inputs.length, sync]);
 
   useEffect(() => {
     getFile().then((_file) => {
       if (!_file) return;
+      if (file && file.name === _file.name && file.size === _file.size) return;
+
       const fileInput = document.getElementById("fileInput");
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(_file);
       fileInput.files = dataTransfer.files;
       setFile(_file);
+    });
+  }, [sync]);
+
+  useEffect(() => {
+    syncStore(() => {
+      setSync((prev) => !prev);
     });
   }, []);
 
@@ -130,13 +131,16 @@ const Popup = () => {
       <div className="my-4">
         <span className={`text-gray-800  font-bold text-xl mb-4`}>Add a PDF file</span>
         <div className="flex gap-3 items-center justify-between">
-          <input id="fileInput" type="file" className={inputLabel} onChange={handleFile} />
-          <label htmlFor="fileInput" className={customFileLabel}>
+          <input id="fileInput" type="file" className="hidden" onChange={handleFile} />
+          <label
+            className="self-start text-center shrink-0 cursor-pointer bg-[#edf2f7] p-2.5 border rounded-md border-[´#cbd5e0] text-sm text-[#4a5568] hover:bg-[#e2e8f0]"
+            htmlFor="fileInput"
+          >
             {file ? "Change" : "Choose"} file
           </label>
           <div className="overflow-hidden whitespace-nowrap overflow-ellipsis">{file?.name}</div>
 
-          <a id="saveFile" onClick={saveFile} href="#">
+          <a id="saveFile" onClick={() => saveFile(file)} href="#">
             <img src={arrowSVG} alt="Save" />
           </a>
         </div>
