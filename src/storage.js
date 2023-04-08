@@ -16,20 +16,33 @@ const getFromStore = (key = "formFiller") =>
     });
   });
 
-const addProperty = async (data) => {
+const addProperty = async (data, key = "formFiller") => {
   const { name, value } = data || {};
-  const storedItem = (await getFromStore("formFiller")) || [];
+  const storedItem = (await getFromStore(key)) || [];
   if (!name || !value) return storedItem;
   const newData = [...storedItem, data];
   await setStore(newData);
   return newData;
 };
 
-const deleteProperty = async (index) => {
-  const storedItem = (await getFromStore("formFiller")) || [];
+const deleteProperty = async (index, key = "formFiller") => {
+  const storedItem = (await getFromStore(key)) || [];
   storedItem.splice(index, 1);
   await setStore(storedItem);
   return storedItem;
+};
+
+const updateProperty = async (propertyName, updatedData = []) => {
+  const storedItem = (await getFromStore("formFiller")) || [];
+  const propertyIndex = storedItem.findIndex((property) => property.name === propertyName);
+
+  if (propertyIndex !== -1) {
+    storedItem[propertyIndex] = {
+      ...storedItem[propertyIndex],
+      ...updatedData,
+    };
+    await setStore(storedItem);
+  }
 };
 
 const addWhiteList = async (url) => {
@@ -49,4 +62,13 @@ const deleteWhiteList = async (url) => {
 
 const syncStore = (updateChanges) => onChanged.addListener(updateChanges);
 
-export { setStore, getFromStore, syncStore, addProperty, deleteProperty, addWhiteList, deleteWhiteList };
+export {
+  setStore,
+  getFromStore,
+  syncStore,
+  addProperty,
+  deleteProperty,
+  addWhiteList,
+  deleteWhiteList,
+  updateProperty,
+};
