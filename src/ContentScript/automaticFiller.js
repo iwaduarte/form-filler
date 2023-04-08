@@ -44,9 +44,7 @@ const updateElementValue = (element, value) => {
   element.innerText = value;
 
   try {
-    element.dispatchEvent(
-      new Event("change", { bubbles: true, cancelable: false })
-    );
+    element.dispatchEvent(new Event("change", { bubbles: true, cancelable: false }));
   } catch (error) {
     console.log("error", error);
   }
@@ -58,21 +56,18 @@ const inputFiller = (fields = []) => {
     const { htmlFor, innerText } = label;
 
     const { value } =
-      fields.find(({ name }) =>
-        innerText.toLowerCase().includes(name.toLowerCase())
+      fields.find(
+        ({ name, aliases = [] }) =>
+          innerText.toLowerCase().includes(name.toLowerCase()) ||
+          aliases?.some((alias) => innerText.toLowerCase().includes(alias.toLowerCase()))
       ) || {};
 
     if (!value) return null;
 
     const input = htmlFor
-      ? document.getElementById(htmlFor) ||
-        document.querySelector(`input[name="${htmlFor}"]`)
-      : label?.querySelector(
-          "input[type='text'],input[type='email'],textarea"
-        ) ||
-        label?.parentNode.querySelector(
-          "input[type='text'],input[type='email'],textarea"
-        );
+      ? document.getElementById(htmlFor) || document.querySelector(`input[name="${htmlFor}"]`)
+      : label?.querySelector("input[type='text'],input[type='email'],textarea") ||
+        label?.parentNode.querySelector("input[type='text'],input[type='email'],textarea");
 
     const select = label?.querySelector("select");
     const indexSelect = select && matchSelectValue(value, select);
@@ -119,9 +114,7 @@ const observeMutations = ({ config, handleMutation, watchSelector = "" }) => {
   const element = document.querySelector(watchSelectors.join(","));
   console.log("[element watched]", element);
   if (element) {
-    const observer = new MutationObserver(
-      handleMutation || defaultHandleMutation
-    );
+    const observer = new MutationObserver(handleMutation || defaultHandleMutation);
     const _config = config || {
       attributes: false,
       childList: true,
@@ -138,4 +131,4 @@ const observeMutations = ({ config, handleMutation, watchSelector = "" }) => {
   }
 };
 
-export { observeMutations, defaultFiller };
+export { observeMutations, defaultFiller, matchSelectValue, inputFiller, updateElementValue };

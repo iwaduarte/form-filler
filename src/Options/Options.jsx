@@ -1,9 +1,21 @@
 import React, { useEffect, useState } from "react";
 import trashSVG from "./assets/trash.svg";
-import { addProperty, deleteProperty, getFromStore, setStore } from "../storage.js";
-import { data } from "../ContentScript/cacheData.js";
+import {
+  addProperty,
+  addWhiteList,
+  deleteProperty,
+  deleteWhiteList,
+  getFromStore,
+  setStore,
+  syncStore,
+  updateProperty,
+} from "../storage.js";
+import { data as cache } from "../ContentScript/cacheData.js";
 import formFiller from "../Popup/assets/form-filler.png";
 import style from "./Options.module.css";
+import { addFile, getFile } from "../indexedDB.js";
+import arrowSVG from "../Popup/assets/arrow.svg";
+import { fileToBase64, saveFile, updateFileInput } from "../file.js";
 
 const { checkBulletPoint } = style;
 
@@ -11,10 +23,13 @@ const Options = () => {
   const [inputs, setInputs] = useState([]);
   const [name, setName] = useState("");
   const [value, setValue] = useState("");
-  const [alias, setAlias] = useState({});
+  const [aliasValues, setAliasValues] = useState({});
+  const [aliases, setAliases] = useState({});
   const [isEnabled, setIsEnabled] = useState(true);
   const [whiteListItem, setWhiteListItem] = useState("");
-  const [whiteList] = useState(data.whiteList);
+  const [whiteList, setWhiteList] = useState(cache.whiteList);
+  const [sync, setSync] = useState(false);
+  const [file, setFile] = useState(null);
 
   const handleChange = async (e) => {
     const setInputValue = {
@@ -22,11 +37,17 @@ const Options = () => {
       name: setName,
       value: setValue,
       whiteList: setWhiteListItem,
+      alias: (value, name) => {
+        setAliasValues({
+          ...aliasValues,
+          [name]: value,
+        });
+      },
     };
-    const { id, value, type, checked } = e.target;
+    const { id, value, type, checked, name } = e.target;
     const newValue = type === "checkbox" ? checked : value;
     if (type === "checkbox") await setStore(checked, "isEnabled");
-    setInputValue[id](newValue);
+    setInputValue[id](newValue, name);
   };
   const handleClear = () => {
     setName("");
@@ -40,23 +61,71 @@ const Options = () => {
     setInputs(await deleteProperty(index));
   };
 
-  const handleFile = (e) => {
+  const handleAddAlias = async (propertyName, newAlias) => {
+    if (!newAlias) return;
+    const newPropertyAliases = {
+      aliases: [...(aliases[propertyName] || []), newAlias],
+    };
+    setAliases((prevAliases) => ({
+      ...prevAliases,
+      [propertyName]: [...(prevAliases[propertyName] || []), newAlias],
+    }));
+    await updateProperty(propertyName, newPropertyAliases);
+  };
+
+  const handleRemoveAlias = async (propertyName, aliasIndex) => {
+    const newPropertyAliases = {
+      aliases: aliases[propertyName].filter((_, index) => index !== aliasIndex),
+    };
+    setAliases((prevAliases) => ({
+      ...prevAliases,
+      [propertyName]: prevAliases[propertyName].filter((_, index) => index !== aliasIndex),
+    }));
+    await updateProperty(propertyName, newPropertyAliases);
+  };
+
+  const handleFile = async (e) => {
     const {
       target: { files },
     } = e;
     const [file] = files;
 
-    if (file.type !== "pdf") return false;
+    if (file.type !== "application/pdf" || file.size > 1e7) return;
+    await addFile(file);
+    updateFileInput(await fileToBase64(file));
+    await setStore(file.name, "file");
+    setFile(file);
   };
 
   useEffect(() => {
     getFromStore(null).then((data) => {
-      const { formFiller = [], isEnabled: _isEnabled = true } = data;
-
+      const { formFiller = [], isEnabled: _isEnabled = true, whiteList } = data;
+      console.log(data, "data");
       setIsEnabled(_isEnabled);
       setInputs(formFiller);
+      setAliases(formFiller.reduce((acc, { name, aliases }) => ({ ...acc, [name]: aliases }), {}));
+      setWhiteList({ ...cache.whiteList, ...whiteList });
     });
-  }, [inputs.length]);
+  }, [inputs.length, sync]);
+
+  useEffect(() => {
+    getFile().then((_file) => {
+      const fileInput = document.getElementById("file-upload");
+      if (!_file || !fileInput) return;
+      if (file && file.name === _file.name && file.size === _file.size) return;
+
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(_file);
+      fileInput.files = dataTransfer.files;
+      setFile(_file);
+    });
+  }, [sync]);
+
+  useEffect(() => {
+    syncStore(() => {
+      setSync((prev) => !prev);
+    });
+  }, []);
 
   return (
     <div className=" bg-custom-gradient">
@@ -88,7 +157,7 @@ const Options = () => {
         </div>
         <div className="flex my-4 gap-8">
           <div className="mt-4">
-            <h2 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-2">Shortcuts</h2>
+            <h2 className="text-gray-800 text-left text-lg font-bold tracking-normal leading-tight mb-2">Shortcuts</h2>
             <ul className="list-none list-inside space-y-2">
               <li className="flex items-center space-x-2">
                 <span className="text-gray-600">⌨</span>
@@ -115,27 +184,31 @@ const Options = () => {
               <li className={checkBulletPoint}>
                 Y Combinator (workatstartup.com) -> Good Fit property name is used to automatic fill
               </li>
-              <li className={checkBulletPoint}>
-                Greenhouse ( greenhouse.com) - Select element is transformed differently
-              </li>
             </ul>
           </div>
         </div>
 
         <div>
-          <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-2">
+          <h1 className="text-gray-800 text-left text-lg font-bold tracking-normal leading-tight mb-2">
             White List
-            <small className="font-normal"> (sites allowed to execute the extension)</small>
+            <small className="font-normal"> - sites allowed to execute the extension automatically </small>
           </h1>
 
-          <ul className="flex mb-2 flex-wrap">
-            {Object.keys(whiteList).map((website, index) => {
+          <ul className="flex flex-wrap">
+            {Object.entries(whiteList).map(([website, value], index) => {
+              if (!value) return null;
               return (
-                <li className="mx-2 first:mx-0 flex border p-2 mb-2" key={index}>
+                <li className="flex border p-2 mb-2" key={index}>
                   {website}
                   <img
                     className="ml-2 w-[14px] inline-block shrink-1 text-right grow-0 cursor-pointer text-gray-200 hover:scale-105"
-                    onClick={() => handleDeleteProperty(index, "whiteList")}
+                    onClick={() => {
+                      deleteWhiteList(website).then();
+                      setWhiteList((prevWhiteList) => ({
+                        ...prevWhiteList,
+                        [website]: false,
+                      }));
+                    }}
                     src={trashSVG}
                     alt="Delete"
                   />
@@ -144,73 +217,130 @@ const Options = () => {
             })}
           </ul>
 
-          <div className="flex gap-3 items-center">
-            <label className="block text-left w-full" htmlFor="whiteList">
+          <div className="flex gap-3 items-center mb-4">
+            <label className="text-left" htmlFor="whiteList">
               <input
                 id="whiteList"
                 value={whiteListItem}
                 onChange={handleChange}
-                className="text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal flex items-center pl-3 text-sm border-gray-300 rounded border w-full"
-                placeholder="i.e www.google.com, www.hire.io )"
+                className="text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
+                placeholder="i.e www.google.com"
               />
             </label>
             <button
-              onClick={handleAddProperty}
-              className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700 transition duration-150 ease-in-out hover:bg-indigo-600 bg-indigo-700 rounded text-white px-8 text-sm"
+              onClick={() => {
+                addWhiteList(whiteListItem.replace(/^(www\.)/, "")).then();
+                setWhiteListItem("");
+              }}
+              className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700 transition duration-150 ease-in-out hover:bg-indigo-600 bg-indigo-700 rounded text-white px-8 py-2 text-sm"
             >
               Add
             </button>
           </div>
         </div>
-        <div> Automatic Fill </div>
-
-        <div className="properties mb-1 py-3 border-b border-[#ead6d6] border-sky-500">
-          <h1 className="text-gray-800 text-left font-lg font-bold tracking-normal leading-tight mb-4">Properties</h1>
-          <ul className="flex flex-col self-center h-[38vh] overflow-y-auto">
+        <div className="text-gray-800 text-left text-lg font-bold tracking-normal leading-tight mb-2">
+          Automatic Fill:
+        </div>
+        <div className="properties mb-4 py-3 border-b border-[#ead6d6] border-sky-500 ">
+          <h1 className="text-gray-800 text-left text-sm font-bold tracking-normal leading-tight mb-4">Properties</h1>
+          <ul className="flex flex-col h-[22vh] justify-self-start overflow-y-auto">
             {inputs?.map((input, index) => {
-              const { name, value, alias } = input;
+              const { name, value } = input;
+              const propertyAliases = aliases[name] || [];
+
               return (
-                <li key={index} className="flex flex-wrap justify-between py-2 border-y border-gray-300">
-                  <div className="mr-2 text-left basis-24 font-bold">{name}:</div>
-                  <div className="mr-2 text-left basis-24 font-bold">{alias}:</div>
-                  <div className="basis-48 shrink-1 text-left"> {value}</div>
-                  <div
-                    className="w-[18px] shrink-1 text-right grow-0 cursor-pointer text-gray-200 hover:scale-105"
-                    onClick={() => handleDeleteProperty(index)}
-                  >
-                    <img src={trashSVG} alt="Delete" />
+                <li key={index} className="flex gap-4 items-baseline py-2 border-y border-gray-300">
+                  <div className="text-left grow-0 shrink-0 font-bold basis-10">{name}:</div>
+                  <div className="basis-36 grow-0 shrink-0 text-left"> {value}</div>
+                  <ul className="basis-24 grow-0 shrink-0 flex flex-col min-w-0 flex-wrap items-start">
+                    <span className="text-gray-600 text-left font-bold">Aliases:</span>
+                    {propertyAliases.map((alias, aliasIndex) => (
+                      <li
+                        key={aliasIndex}
+                        className=" cursor-pointer inline-flex items-center px-2 py-1 m-1 rounded text-sm bg-blue-100 text-blue-700 hover:bg-blue-200"
+                      >
+                        <span>{alias}</span>
+                        <button
+                          className="ml-2 text-gray-400 hover:text-red-500"
+                          onClick={() => handleRemoveAlias(name, aliasIndex)}
+                        >
+                          &times;
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="shrink-0 grow">
+                    <input
+                      id="alias"
+                      type="text"
+                      name={name}
+                      value={aliasValues[name] || ""}
+                      onChange={handleChange}
+                      className="border rounded pl-3"
+                      placeholder="Add alias"
+                    />
+                    <button
+                      onClick={() => {
+                        handleAddAlias(name, aliasValues[name]).then();
+                        setAliasValues({
+                          ...aliasValues,
+                          [name]: "",
+                        });
+                      }}
+                      className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-700 transition duration-150 ease-in-out hover:bg-indigo-600 bg-indigo-700 rounded text-white p-1 text-xs"
+                    >
+                      Add
+                    </button>
                   </div>
+                  <img
+                    className="w-[18px] text-right cursor-pointer text-gray-200 hover:scale-105"
+                    onClick={() => handleDeleteProperty(index)}
+                    src={trashSVG}
+                    alt="Delete Property"
+                    title="Delete Property"
+                  />
                 </li>
               );
             })}
           </ul>
         </div>
-        <div className="mb-2">
-          <label htmlFor="file-upload" className="text-gray-800 text-sm font-bold cursor-pointer">
-            Add PDF file:
-          </label>
-          <input id="file-upload" type="file" onChange={handleFile} className="hidden" />
+        <div className="my-6">
+          <span className="text-gray-800  font-bold text-xl mb-4 block">Add a PDF file </span>
+          <div className="flex items-center gap-8">
+            <label
+              className="  self-start text-center shrink-0 cursor-pointer bg-[#edf2f7] p-2.5 border rounded-md border-[´#cbd5e0] text-sm text-[#4a5568] hover:bg-[#e2e8f0]"
+              htmlFor="file-upload"
+            >
+              {file ? "Change" : "Choose"} file
+            </label>
+
+            <div className=" overflow-hidden whitespace-nowrap overflow-ellipsis">{file?.name}</div>
+            <input id="file-upload" type="file" onChange={handleFile} className="hidden" />
+            <a id="saveFile" onClick={() => saveFile(file)} href="#">
+              <img src={arrowSVG} alt="Save" />
+            </a>
+          </div>
         </div>
-        <div className="">
-          <label className="block text-left" htmlFor="name">
+        <div className="flex gap-8">
+          <label className=" text-left" htmlFor="name">
             <span className="text-gray-800 text-sm font-bold "> Field Name:</span>
             <input
               id="name"
               value={name}
               onChange={handleChange}
               className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
-              placeholder="(i.e Email, First Name, Last Name)"
+              placeholder="i.e Email, First Name"
             />
           </label>
 
-          <label className="block text-left" htmlFor="value">
+          <label className=" text-left" htmlFor="value">
             <span className="text-gray-800 text-sm font-bold leading-tight tracking-normal">Field Value:</span>
             <input
               id="value"
               value={value}
               onChange={handleChange}
               className="mb-5 mt-2 text-gray-600 focus:outline-none focus:border focus:border-indigo-700 font-normal w-full h-10 flex items-center pl-3 text-sm border-gray-300 rounded border"
-              placeholder="(i.e Value for the field)"
+              placeholder="i.e Value for the field"
             />
           </label>
         </div>
