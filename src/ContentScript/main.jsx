@@ -22,7 +22,7 @@ try {
 } catch (e) {}
 
 const startOnKey = async (evt, fillForms) => {
-  const url = document.location.hostname.replace("www.", "");
+  const url = document.location.hostname.replace(/^(www\.)/, "");
 
   const modifier = evt.ctrlKey || evt.metaKey;
 
@@ -58,12 +58,12 @@ const createReactRoot = (element) => {
   return ReactDOM.createRoot(element);
 };
 
-const startApplication = async (pdfFile) => {
+const startApplication = async (pdfFile, siteConfiguration, data) => {
   const shadow = createShadowElement();
   const reactRoot = createReactRoot(shadow);
   data.file = pdfFile ? await base64ToBlob(pdfFile, "application/pdf") : null;
 
-  const url = document.location.hostname.replace("www.", "");
+  const url = document.location.hostname.replace(/^(www\.)/, "");
   data.url = url;
   const { config, handleMutation, filler, watchSelector } = siteConfiguration[url] || {};
   const fillForms = filler || defaultFiller;
@@ -110,4 +110,6 @@ const startApplication = async (pdfFile) => {
   observeMutations({ config, handleMutation, watchSelector });
 };
 
-startApplication(_pdfFile).then();
+startApplication(_pdfFile, siteConfiguration, data).then();
+
+export { startApplication };
