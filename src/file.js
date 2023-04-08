@@ -36,4 +36,12 @@ const updateFileInput = (file) => {
   });
 };
 
-export { fileToBase64, base64ToBlob, updateFileInput };
+const saveFile = (file) => {
+  if (!file) return;
+
+  const link = document.getElementById("saveFile");
+  link.download = file?.name || "resume.pdf";
+  link.href = URL.createObjectURL(file);
+};
+
+export { fileToBase64, base64ToBlob, updateFileInput, saveFile };
