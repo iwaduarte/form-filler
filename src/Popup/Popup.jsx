@@ -7,7 +7,7 @@ import { addProperty, deleteProperty, getFromStore, setStore, syncStore } from "
 import { addFile, getFile } from "../indexedDB.js";
 import { fileToBase64, saveFile, updateFileInput } from "../file.js";
 
-const { runtime } = chrome;
+const { runtime } = chrome || browser;
 
 const Popup = () => {
   const [inputs, setInputs] = useState([]);
@@ -57,7 +57,7 @@ const Popup = () => {
 
   useEffect(() => {
     getFromStore(null).then((data) => {
-      const { formFiller = [], isEnabled: _isEnabled = true } = data;
+      const { formFiller = [], isEnabled: _isEnabled = true } = data || {};
       setIsEnabled(_isEnabled);
       setInputs(formFiller);
     });
@@ -84,7 +84,7 @@ const Popup = () => {
 
   return (
     <div className="py-6 px-5 md:px-10 bg-gray-100 shadow-md text-gray-800 border-gray-400 bg-custom-gradient">
-      <div className="flex justify-between mb-2">
+      <div className="flex gap-16 justify-between mb-2">
         <h1 className="text-[32px] font-bold text-gray-700 inline">
           <img className="w-8 h-8 mr-[-6px] inline-block" alt="logo" src={formFiller} />
           orm-Filler
@@ -114,11 +114,11 @@ const Popup = () => {
           {inputs?.map((input, index) => {
             const { name, value } = input;
             return (
-              <li key={index} className="flex flex-wrap justify-between py-2 border-y border-gray-300">
-                <div className="mr-2  text-left basis-24  font-bold ">{name}:</div>
-                <div className="basis-48 shrink-1 text-left"> {value}</div>
+              <li key={index} className="flex gap-6 py-2 border-y border-gray-300">
+                <div className="text-left basis-20 text-xs leading-6 font-bold min-w-0 overflow-x-hidden">{name}:</div>
+                <div className="basis-48 shrink-1 text-xs leading-6 text-left"> {value}</div>
                 <div
-                  className="w-[18px] shrink-1 text-right grow-0 cursor-pointer text-gray-200 hover:scale-105"
+                  className="w-[18px] shrink-1 text-right grow-0 cursor-pointer text-gray-200 "
                   onClick={() => handleDeleteProperty(index)}
                 >
                   <img src={trashSVG} alt="Delete" />

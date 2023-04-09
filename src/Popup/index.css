@@ -13,23 +13,23 @@
   -webkit-text-size-adjust: 100%;
 }
 #root {
-  max-width: 1280px;
+  max-width: 420px;
   margin: 0 auto;
 }
 
 body {
   margin: 0;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   display: flex;
   place-items: center;
   min-width: 320px;
 }
 .toggle-checkbox:checked {
   right: 0;
-  border-color: #68D391;
+  border-color: #68d391;
 }
 .toggle-checkbox:checked + .toggle-label {
-  background-color: #68D391;
+  background-color: #68d391;
 }
 
 body::-webkit-scrollbar {
@@ -39,5 +39,3 @@ body::-webkit-scrollbar {
 body::-webkit-scrollbar-button {
   display: none !important;
 }
-
-
