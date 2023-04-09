@@ -22,11 +22,7 @@ const Context = ({
 
   useEffect(() => {
     getFromStore(null).then((data) => {
-      const {
-        formFiller,
-        isEnabled: isEnabledFromStore,
-        whiteList = {},
-      } = data;
+      const { formFiller, isEnabled: isEnabledFromStore, whiteList = {} } = data || {};
 
       isEnabled.current = isEnabledFromStore;
       isWhiteListed.current = { ...cache.whiteList, ...whiteList }[url];
@@ -34,9 +30,7 @@ const Context = ({
     });
   }, [sync]);
 
-  return isEnabled.current && isWhiteListed.current ? (
-    <Content fields={fields} />
-  ) : null;
+  return isEnabled.current && isWhiteListed.current ? <Content fields={fields} /> : null;
 };
 
 export default Context;

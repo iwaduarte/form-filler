@@ -40,7 +40,6 @@ const matchSelectValue = (desiredValue, selectElem) => {
 
 const updateElementValue = (element, value) => {
   element.value = value;
-  element.innerHTML = value;
   element.innerText = value;
 
   try {

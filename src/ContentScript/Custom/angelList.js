@@ -13,8 +13,7 @@ const handleMutation = (mutationList) => {
       const { target } = mutationRecord;
       return (
         target.tagName !== "TEXTAREA" &&
-        (target.className === "styles_motionContainer__0bu1f" ||
-          target.className.includes("ReactModal__Content"))
+        (target.className === "styles_motionContainer__0bu1f" || target.className.includes("ReactModal__Content"))
       );
     });
     if (!shouldUpdate) return;
@@ -33,14 +32,8 @@ const filler = (fields = []) => {
   const { value } = fields.find((field) => field.name === "Good Fit") || {};
   if (!value) return;
 
-  const userName = textArea?.placeholder?.replace(
-    /Write a note to (.+) at.+/,
-    "$1"
-  );
-  const message = value?.replace("#USER#", userName);
-
-  textArea.value = message;
-  textArea.innerHTML = message;
+  const userName = textArea?.placeholder?.replace(/Write a note to (.+) at.+/, "$1");
+  textArea.value = value?.replace("#USER#", userName);
   textArea.dispatchEvent(new Event("change", { bubbles: true }));
 };
 

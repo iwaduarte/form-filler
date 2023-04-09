@@ -8,15 +8,13 @@ const Content = ({ fields = [] }) => {
 
   const handleClickOutside = (e) => {
     const tagName = e.target.tagName.toLowerCase();
-    if (tagName === "input" || tagName === "textarea" || !displayList)
-      return false;
+    if (tagName === "input" || tagName === "textarea" || !displayList) return false;
     setDisplayList(false);
   };
 
   const handleListClick = (index) => {
     const { value } = fields[index] || {};
     if (!targetElement || !value) return false;
-    targetElement.innerHTML = value;
     targetElement.value = value;
     setDisplayList(false);
   };
@@ -57,7 +55,7 @@ const Content = ({ fields = [] }) => {
           return (
             <li
               key={index}
-              className="py-2 px-3 first:rounded-t-xl border-b border-gray-200   last:rounded-b-xl hover:bg-blue-700 hover:text-white "
+              className="py-2 px-3 first:rounded-t-xl border-b border-gray-200 last:rounded-b-xl hover:bg-blue-700 hover:text-white "
               onClick={() => handleListClick(index)}
             >
               {name}

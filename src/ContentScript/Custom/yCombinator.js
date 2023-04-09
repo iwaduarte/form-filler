@@ -33,10 +33,7 @@ const filler = (fields = []) => {
   if (!value) return;
 
   const userName = modalTitle?.replace(/Reach out to (.+) at.+/, "$1");
-  const message = value?.replace("#USER#", userName);
-
-  textArea.value = message;
-  textArea.innerHTML = message;
+  textArea.value = value?.replace("#USER#", userName);
   textArea.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
