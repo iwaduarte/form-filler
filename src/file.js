@@ -1,4 +1,4 @@
-const { tabs } = chrome;
+const { tabs } = chrome || browser;
 
 const fileToBase64 = (file) => {
   if (!file) return null;

@@ -99,8 +99,7 @@ const Options = () => {
 
   useEffect(() => {
     getFromStore(null).then((data) => {
-      const { formFiller = [], isEnabled: _isEnabled = true, whiteList } = data;
-      console.log(data, "data");
+      const { formFiller = [], isEnabled: _isEnabled = true, whiteList } = data || {};
       setIsEnabled(_isEnabled);
       setInputs(formFiller);
       setAliases(formFiller.reduce((acc, { name, aliases }) => ({ ...acc, [name]: aliases }), {}));

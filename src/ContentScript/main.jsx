@@ -16,6 +16,8 @@ const siteConfiguration = {
   "workatastartup.com": yCombinator,
 };
 
+const browserObject = chrome || browser;
+
 let _pdfFile = null;
 try {
   _pdfFile = pdfFile;
@@ -49,7 +51,15 @@ const createShadowElement = () => {
   const CSSStyle = new CSSStyleSheet();
   div.setAttribute("id", "form-filler-ext");
   CSSStyle.replaceSync(css);
-  shadow.adoptedStyleSheets = [CSSStyle];
+
+  try {
+    shadow.adoptedStyleSheets = [CSSStyle];
+  } catch (e) {
+    console.log("Error", e);
+    const style = document.createElement("style");
+    style.textContent = css;
+    shadow.appendChild(style);
+  }
   document.body.appendChild(div);
   return shadow;
 };
@@ -94,7 +104,7 @@ const startApplication = async (pdfFile, siteConfiguration, data) => {
     data.isEnabled && fillForms(data.fields);
   });
 
-  chrome.runtime.onMessage.addListener(async function (message) {
+  browserObject.runtime.onMessage.addListener(async function (message) {
     const { action, file } = message;
     if (action === "fill") {
       const fileData = await base64ToBlob(JSON.parse(file));

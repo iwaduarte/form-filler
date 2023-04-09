@@ -2,7 +2,7 @@ import pkg from "./package.json";
 
 const manifest = {
   background: {
-    scripts: ["src/Background/background.js", "src/Background/hot-reload.js"],
+    scripts: ["src/Background/background.js"],
     persistent: false,
   },
 
@@ -16,14 +16,12 @@ const manifest = {
     default_popup: "src/Popup/index.html",
   },
   web_accessible_resources: ["src/ContentScript/main.jsx"],
-  permissions: [
-    "activeTab",
-    "tabs",
-    "storage",
-    "management",
-    "runtime",
-    "<all_urls>",
-  ],
+  permissions: ["activeTab", "tabs", "storage", "management", "<all_urls>"],
+  browser_specific_settings: {
+    gecko: {
+      id: "form-filler@iwaduarte.dev",
+    },
+  },
 };
 
 export default {

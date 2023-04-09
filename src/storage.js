@@ -1,6 +1,7 @@
 // noinspection JSIncompatibleTypesComparison
 
-const { sync, onChanged } = chrome.storage;
+const browserObject = chrome || browser;
+const { sync, onChanged } = browserObject.storage;
 
 const setStore = (value, key = "formFiller") =>
   new Promise((res) => {

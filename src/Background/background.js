@@ -1,7 +1,7 @@
 import { getFile } from "../indexedDB.js";
 import { fileToBase64 } from "../file.js";
 
-const { tabs } = chrome;
+const { tabs } = chrome || browser;
 
 const executeContentScript = async () => {
   const file = await getFile().then((file) => fileToBase64(file));
