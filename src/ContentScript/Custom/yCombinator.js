@@ -7,7 +7,6 @@ const config = {
 };
 
 const handleMutation = (mutationList) => {
-  console.log(mutationList);
   clearTimeout(data.timeoutId);
   data.timeoutId = setTimeout(() => {
     const shouldUpdate = mutationList.some((mutationRecord) => {

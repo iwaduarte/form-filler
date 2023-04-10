@@ -8,7 +8,7 @@ const Content = ({ fields = [] }) => {
 
   const handleClickOutside = (e) => {
     const tagName = e.target.tagName.toLowerCase();
-    if (tagName === "input" || tagName === "textarea" || !displayList) return false;
+    if (tagName === "input" || tagName === "textarea") return false;
     setDisplayList(false);
   };
 
@@ -30,7 +30,7 @@ const Content = ({ fields = [] }) => {
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [displayList]);
+  }, []);
 
   useEffect(() => {
     const selectors = `input[type='text'],input[type='radio'],input[type='checkbox'],input[type='email'],input[type='number'],input[type='url'],input[type='tel'],textarea`;
@@ -43,7 +43,7 @@ const Content = ({ fields = [] }) => {
         input.removeEventListener("click", handleInputClick);
       });
     };
-  }, [fields.length]);
+  }, []);
 
   return displayList ? (
     <div

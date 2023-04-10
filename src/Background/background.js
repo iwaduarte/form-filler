@@ -5,9 +5,7 @@ const { tabs } = chrome || browser;
 
 const executeContentScript = async () => {
   const file = await getFile().then((file) => fileToBase64(file));
-
   const stringCode = "var pdfFile = " + file;
-  console.log(stringCode.substring(0, 150));
 
   tabs.executeScript(
     {
