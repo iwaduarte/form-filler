@@ -19,7 +19,7 @@
 
 body {
   margin: 0;
-  font-family: "Roboto", sans-serif;
+  font-family: "Segoe UI", Tahoma, sans-serif;
   display: flex;
   place-items: center;
   min-width: 320px;

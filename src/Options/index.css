@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Segoe UI", Tahoma, sans-serif;
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
@@ -18,10 +18,8 @@
 
 .toggle-checkbox:checked {
   right: 0;
-  border-color: #68D391;
+  border-color: #68d391;
 }
 .toggle-checkbox:checked + .toggle-label {
-  background-color: #68D391;
+  background-color: #68d391;
 }
-
-

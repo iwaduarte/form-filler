@@ -158,15 +158,15 @@ const Options = () => {
           <div className="mt-4">
             <h2 className="text-gray-800 text-left text-lg font-bold tracking-normal leading-tight mb-2">Shortcuts</h2>
             <ul className="list-none list-inside space-y-2">
-              <li className="flex items-center space-x-2">
+              <li className="flex items-center  text-xs space-x-2">
                 <span className="text-gray-600">⌨</span>
                 <span> (Ctrl | Cmd ) + Alt + F = Fill forms</span>
               </li>
-              <li className="flex items-center space-x-2">
+              <li className="flex items-center text-xs space-x-2">
                 <span className="text-gray-600">⌨</span>
                 <span> (Ctrl | Cmd ) + Alt + A = Add site to white list</span>
               </li>
-              <li className="flex items-center space-x-2">
+              <li className="flex items-center text-xs space-x-2">
                 <span className="text-gray-600">⌨</span>
                 <span> (Ctrl | Cmd ) + Alt + R = Remove site from white list</span>
               </li>
@@ -176,8 +176,8 @@ const Options = () => {
             <h2 className="text-gray-800 text-left text-lg font-bold tracking-normal leading-tight mb-2">
               Built-in Configurations
             </h2>
-            <ul className="list-none list-inside">
-              <li className={checkBulletPoint}>
+            <ul className="list-none list-inside text-xs space-y-2">
+              <li className={`${checkBulletPoint}`}>
                 Angel List | WellFound (angel.co | wellfound.com) -> Good Fit property name is used to automatic fill
               </li>
               <li className={checkBulletPoint}>

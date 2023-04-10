@@ -1,9 +1,14 @@
+body {
+  font-family: "Segoe UI", Tahoma, sans-serif;
+  font-size: 75%;
+}
+
 .checkBulletPoint::before {
-    content: '✔';
-    display: inline-block;
-    width: 1em;
-    margin-left: -1.25em;
-    margin-right: 0.25em;
-    color: #10b981; /* Change this to your desired checkmark color */
-    font-weight: bold;
+  content: "✔";
+  display: inline-block;
+  width: 1em;
+  margin-left: -1.25em;
+  margin-right: 0.25em;
+  color: #10b981; /* Change this to your desired checkmark color */
+  font-weight: bold;
 }
