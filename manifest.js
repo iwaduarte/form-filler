@@ -5,7 +5,12 @@ const manifest = {
     scripts: ["src/Background/background.js"],
     persistent: false,
   },
-
+  icons: {
+    16: "form-filler.png",
+    32: "form-filler.png",
+    48: "form-filler.png",
+    128: "form-filler.png",
+  },
   options_ui: {
     page: "src/Options/index.html",
     open_in_tab: true,
