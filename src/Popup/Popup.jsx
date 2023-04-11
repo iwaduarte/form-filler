@@ -129,7 +129,7 @@ const Popup = () => {
         </ul>
       </div>
       <div className="my-4">
-        <span className={`text-gray-800  font-bold text-xl mb-4`}>Add a PDF file</span>
+        <span className={`text-gray-800  font-bold text-xl mb-4`}>Add a PDF file (CV/Resume) </span>
         <div className="flex gap-3 items-center justify-between">
           <input id="fileInput" type="file" className="hidden" onChange={handleFile} />
           <label

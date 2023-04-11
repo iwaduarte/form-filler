@@ -304,7 +304,7 @@ const Options = () => {
           </ul>
         </div>
         <div className="my-6">
-          <span className="text-gray-800  font-bold text-xl mb-4 block">Add a PDF file </span>
+          <span className="text-gray-800  font-bold text-xl mb-4 block">Add a PDF file (CV/Resume) </span>
           <div className="flex items-center gap-8">
             <label
               className="  self-start text-center shrink-0 cursor-pointer bg-[#edf2f7] p-2.5 border rounded-md border-[´#cbd5e0] text-sm text-[#4a5568] hover:bg-[#e2e8f0]"
