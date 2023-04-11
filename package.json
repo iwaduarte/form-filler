@@ -1,5 +1,6 @@
 {
   "name": "form-filler",
+  "displayName": "Form Filler",
   "description": "Filling form the right way",
   "private": true,
   "version": "0.0.1",

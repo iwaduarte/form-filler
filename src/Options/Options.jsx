@@ -127,7 +127,7 @@ const Options = () => {
   }, []);
 
   return (
-    <div className=" bg-custom-gradient">
+    <div className=" bg-custom-gradient h-screen">
       <div className="max-w-[60%] py-6 px-5 md:px-10 shadow-md  text-gray-800 ">
         <div className="flex justify-between mb-4">
           <h1 className="text-[32px] font-bold text-gray-700 inline">
@@ -242,7 +242,7 @@ const Options = () => {
         </div>
         <div className="properties mb-4 py-3 border-b border-[#ead6d6] border-sky-500 ">
           <h1 className="text-gray-800 text-left text-sm font-bold tracking-normal leading-tight mb-4">Properties</h1>
-          <ul className="flex flex-col h-[22vh] justify-self-start overflow-y-auto">
+          <ul className="flex flex-col max-h-[22vh] justify-self-start overflow-y-auto">
             {inputs?.map((input, index) => {
               const { name, value } = input;
               const propertyAliases = aliases[name] || [];
