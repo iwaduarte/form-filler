@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import {
   setStore,
   getFromStore,
@@ -9,20 +10,10 @@ import {
   updateProperty,
 } from "../storage.js";
 
-// Mock chrome.storage.sync
-const mockChromeStorageSync = {
-  set: jest.fn(),
-  get: jest.fn(),
-  onChanged: {
-    addListener: jest.fn(),
-  },
-};
-
-global.chrome = {
-  storage: {
-    sync: mockChromeStorageSync,
-  },
-};
+const { chrome } = global;
+const {
+  storage: { sync, onChanged },
+} = chrome;
 
 describe("setStore and getFromStore", () => {
   afterEach(() => {
@@ -31,14 +22,14 @@ describe("setStore and getFromStore", () => {
 
   test("should set and get data from the store", async () => {
     const testValue = [{ name: "test", value: "value" }];
-    mockChromeStorageSync.set.mockImplementationOnce((_, cb) => cb());
-    mockChromeStorageSync.get.mockImplementationOnce((_, cb) => cb({ formFiller: testValue }));
+    sync.set.mockImplementationOnce((_, cb) => cb());
+    sync.get.mockImplementationOnce((_, cb) => cb({ formFiller: testValue }));
 
     await setStore(testValue);
-    expect(mockChromeStorageSync.set).toHaveBeenCalledWith({ formFiller: testValue }, expect.any(Function));
+    expect(sync.set).toHaveBeenCalledWith({ formFiller: testValue }, expect.any(Function));
 
     const storedValue = await getFromStore();
-    expect(mockChromeStorageSync.get).toHaveBeenCalledWith("formFiller", expect.any(Function));
+    expect(sync.get).toHaveBeenCalledWith("formFiller", expect.any(Function));
     expect(storedValue).toEqual(testValue);
   });
 });
@@ -53,8 +44,8 @@ describe("addProperty and deleteProperty", () => {
     const newProperty = { name: "newTest", value: "newValue" };
     const updatedValue = [...initialValue, newProperty];
 
-    mockChromeStorageSync.get.mockImplementation((_, cb) => cb({ formFiller: initialValue }));
-    mockChromeStorageSync.set.mockImplementation((_, cb) => cb());
+    sync.get.mockImplementation((_, cb) => cb({ formFiller: initialValue }));
+    sync.set.mockImplementation((_, cb) => cb());
 
     const addedValue = await addProperty(newProperty);
     expect(addedValue).toEqual(updatedValue);
@@ -74,8 +65,8 @@ describe("addWhiteList and deleteWhiteList", () => {
     const initialWhiteList = {};
     const updatedWhiteList = { [url]: true };
 
-    mockChromeStorageSync.get.mockImplementation((_, cb) => cb({ whiteList: initialWhiteList }));
-    mockChromeStorageSync.set.mockImplementation((_, cb) => cb());
+    sync.get.mockImplementation((_, cb) => cb({ whiteList: initialWhiteList }));
+    sync.set.mockImplementation((_, cb) => cb());
 
     const addedWhiteList = await addWhiteList(url);
     expect(addedWhiteList).toEqual(updatedWhiteList);
@@ -95,17 +86,17 @@ describe("updateProperty", () => {
     const updatedData = { value: "updatedValue" };
     const updatedValue = [{ name: "test", value: "updatedValue" }];
 
-    mockChromeStorageSync.get.mockImplementation((_, cb) => cb({ formFiller: initialValue }));
-    mockChromeStorageSync.set.mockImplementation((_, cb) => cb());
+    sync.get.mockImplementation((_, cb) => cb({ formFiller: initialValue }));
+    sync.set.mockImplementation((_, cb) => cb());
 
     await updateProperty("test", updatedData);
-    expect(mockChromeStorageSync.set).toHaveBeenCalledWith({ formFiller: updatedValue }, expect.any(Function));
+    expect(sync.set).toHaveBeenCalledWith({ formFiller: updatedValue }, expect.any(Function));
   });
 });
 
 describe("syncStore", () => {
   test("should add an onChanged listener for the store", () => {
     syncStore(() => {});
-    expect(mockChromeStorageSync.onChanged.addListener).toHaveBeenCalledWith(expect.any(Function));
+    expect(onChanged.addListener).toHaveBeenCalledWith(expect.any(Function));
   });
 });

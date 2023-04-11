@@ -1,4 +1,12 @@
-import { filler, config, handleMutation } from "../Custom/angelList.js";
+import { filler, config, shouldUpdate } from "../Custom/angelList.js";
+
+describe("config", () => {
+  test("should have correct properties", () => {
+    expect(config).toHaveProperty("attributes", false);
+    expect(config).toHaveProperty("childList", true);
+    expect(config).toHaveProperty("subtree", true);
+  });
+});
 
 describe("filler function", () => {
   test("should fill the textarea with the message", () => {
@@ -16,49 +24,17 @@ describe("filler function", () => {
   });
 });
 
-describe("config", () => {
-  test("should have correct properties", () => {
-    expect(config).toHaveProperty("attributes", false);
-    expect(config).toHaveProperty("childList", true);
-    expect(config).toHaveProperty("subtree", true);
-  });
-});
-
-describe("handleMutation", () => {
+describe("shouldUpdate function", () => {
   beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  test("should call filler when conditions are met", () => {
     document.body.innerHTML = `
       <div class="styles_modal__MFCOh">
         <textarea placeholder="Write a note to John at..."></textarea>
       </div>
     `;
-
-    const mutationList = [
-      {
-        target: {
-          tagName: "DIV",
-          className: "styles_motionContainer__0bu1f",
-        },
-      },
-    ];
-
-    const fillerSpy = jest.spyOn(module, "filler");
-
-    handleMutation(mutationList);
-
-    jest.advanceTimersByTime(600);
-    expect(fillerSpy).toHaveBeenCalled();
   });
 
-  test("should not call filler when conditions are not met", () => {
-    const mutationList = [
+  test("should return false if none of the conditions are met", () => {
+    const arrayList = [
       {
         target: {
           tagName: "DIV",
@@ -66,12 +42,48 @@ describe("handleMutation", () => {
         },
       },
     ];
+    const result = shouldUpdate(arrayList);
+    expect(result).toBe(false);
+  });
 
-    const fillerSpy = jest.spyOn(module, "filler");
+  test("should return the textarea element if conditions are met", () => {
+    const arrayList = [
+      {
+        target: {
+          tagName: "DIV",
+          className: "styles_motionContainer__0bu1f",
+        },
+      },
+    ];
+    const result = shouldUpdate(arrayList);
+    const textarea = document.querySelector(".styles_modal__MFCOh textarea");
+    expect(result).toBe(textarea);
+  });
 
-    handleMutation(mutationList);
+  test("should return false if the target is a textarea", () => {
+    const arrayList = [
+      {
+        target: {
+          tagName: "TEXTAREA",
+          className: "styles_modal__MFCOh",
+        },
+      },
+    ];
+    const result = shouldUpdate(arrayList);
+    expect(result).toBe(false);
+  });
 
-    jest.advanceTimersByTime(600);
-    expect(fillerSpy).not.toHaveBeenCalled();
+  test("should return the textarea element if className includes ReactModal__Content", () => {
+    const arrayList = [
+      {
+        target: {
+          tagName: "DIV",
+          className: "ReactModal__Content",
+        },
+      },
+    ];
+    const result = shouldUpdate(arrayList);
+    const textarea = document.querySelector(".styles_modal__MFCOh textarea");
+    expect(result).toBe(textarea);
   });
 });

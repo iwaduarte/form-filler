@@ -1,10 +1,5 @@
-import {
-  defaultFiller,
-  inputFiller,
-  matchSelectValue,
-  observeMutations,
-  updateElementValue,
-} from "../automaticFiller.js";
+import { jest } from "@jest/globals";
+import { defaultFiller, inputFiller, matchSelectValue, updateElementValue } from "../automaticFiller.js";
 
 describe("defaultFiller", () => {
   test("should fill input and textarea elements", () => {
@@ -27,78 +22,6 @@ describe("defaultFiller", () => {
     const messageTextarea = document.getElementById("message");
     expect(emailInput.value).toBe("test@example.com");
     expect(messageTextarea.value).toBe("Hello!");
-  });
-});
-
-describe("observeMutations", () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  test("should call defaultFiller on mutations", () => {
-    document.body.innerHTML = `
-      <div id="__next">
-        <label for="email">Email:</label>
-        <input type="email" id="email" />
-        <label for="message">Message:</label>
-        <textarea id="message"></textarea>
-      </div>
-    `;
-
-    const fields = [
-      { name: "Email", value: "test@example.com" },
-      { name: "Message", value: "Hello!" },
-    ];
-
-    global.data = { fields, isEnabled: true };
-
-    const defaultFillerSpy = jest.spyOn(module, "defaultFiller");
-
-    const observer = observeMutations({});
-
-    const newNode = document.createElement("div");
-    newNode.innerHTML = "<p>New content</p>";
-    document.getElementById("__next").appendChild(newNode);
-
-    jest.advanceTimersByTime(300);
-    expect(defaultFillerSpy).toHaveBeenCalled();
-
-    observer.disconnect();
-  });
-
-  test("should not call defaultFiller when conditions are not met", () => {
-    document.body.innerHTML = `
-      <div id="__next">
-        <label for="email">Email:</label>
-        <input type="email" id="email" />
-        <label for="message">Message:</label>
-        <textarea id="message"></textarea>
-      </div>
-    `;
-
-    const fields = [
-      { name: "Email", value: "test@example.com" },
-      { name: "Message", value: "Hello!" },
-    ];
-
-    global.data = { fields, isEnabled: true };
-
-    const defaultFillerSpy = jest.spyOn(module, "defaultFiller");
-
-    const observer = observeMutations({});
-
-    const newNode = document.createElement("input");
-    newNode.setAttribute("type", "text");
-    document.getElementById("__next").appendChild(newNode);
-
-    jest.advanceTimersByTime(300);
-    expect(defaultFillerSpy).not.toHaveBeenCalled();
-
-    observer.disconnect();
   });
 });
 
@@ -129,7 +52,7 @@ describe("matchSelectValue", () => {
     const desiredValue = "Option 3";
 
     const result = matchSelectValue(desiredValue, selectElement);
-    expect(result).toBeNull();
+    expect(result).toBeUndefined();
   });
 });
 

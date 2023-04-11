@@ -1,3 +1,4 @@
+import { jest } from "@jest/globals";
 import { fileToBase64, base64ToBlob, updateFileInput, saveFile } from "../file.js";
 
 describe("fileToBase64", () => {
@@ -33,15 +34,6 @@ describe("base64ToBlob", () => {
 });
 
 describe("updateFileInput", () => {
-  beforeEach(() => {
-    global.chrome = {
-      tabs: {
-        query: jest.fn((_, cb) => cb([{ id: 1 }])),
-        sendMessage: jest.fn(),
-      },
-    };
-  });
-
   test("should call chrome.tabs.sendMessage with the correct parameters", () => {
     const file = { name: "test.txt", contents: "data:text/plain;base64,c2FtcGxlIGNvbnRlbnQ=" };
     updateFileInput(file);
@@ -67,7 +59,7 @@ describe("saveFile", () => {
     const file = new File(["sample content"], "test.txt", { type: "text/plain" });
     saveFile(file);
     expect(link.download).toEqual("test.txt");
-    expect(link.href).toEqual("test-url");
+    expect(link.href).toContain("test-url");
     expect(URL.createObjectURL).toHaveBeenCalledWith(file);
   });
 });

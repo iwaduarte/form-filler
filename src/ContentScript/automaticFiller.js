@@ -57,8 +57,8 @@ const inputFiller = (fields = []) => {
     const { value } =
       fields.find(
         ({ name, aliases = [] }) =>
-          innerText.toLowerCase().includes(name.toLowerCase()) ||
-          aliases?.some((alias) => innerText.toLowerCase().includes(alias.toLowerCase()))
+          innerText?.toLowerCase().includes(name?.toLowerCase()) ||
+          aliases?.some((alias) => innerText?.toLowerCase().includes(alias?.toLowerCase()))
       ) || {};
 
     if (!value) return null;
