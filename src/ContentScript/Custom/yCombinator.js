@@ -6,21 +6,23 @@ const config = {
   subtree: false,
 };
 
+const shouldUpdate = (arrayList) => {
+  return (arrayList || []).some((mutationRecord) => {
+    const { addedNodes } = mutationRecord;
+    const [newNode] = addedNodes || [];
+    return newNode?.id === "headlessui-portal-root";
+  });
+};
+
 const handleMutation = (mutationList) => {
   clearTimeout(data.timeoutId);
   data.timeoutId = setTimeout(() => {
-    const shouldUpdate = mutationList.some((mutationRecord) => {
-      const { addedNodes } = mutationRecord;
-      const [newNode] = addedNodes || [];
-      return newNode?.id === "headlessui-portal-root";
-    });
-    if (!shouldUpdate) return;
-    console.log("filling textArea");
-    filler(data.fields);
+    shouldUpdate(mutationList) && filler(data.fields);
   }, 300);
 };
 
 const filler = (fields = []) => {
+  console.log("filling textArea yC");
   const modal = document.querySelector('[id^="headlessui-dialog-panel"]');
   const [textArea] = document.getElementsByTagName("textarea");
 
@@ -36,4 +38,4 @@ const filler = (fields = []) => {
   textArea.dispatchEvent(new Event("change", { bubbles: true }));
 };
 
-export { filler, config, handleMutation };
+export { filler, shouldUpdate, handleMutation, config };

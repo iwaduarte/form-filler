@@ -1,4 +1,4 @@
-import { filler, config, handleMutation } from "../Custom/yCombinator.js";
+import { filler, config, shouldUpdate } from "../Custom/yCombinator.js";
 
 describe("filler function", () => {
   test("should fill the textarea with the message", () => {
@@ -25,57 +25,38 @@ describe("config", () => {
   });
 });
 
-describe("handleMutation", () => {
-  beforeEach(() => {
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.useRealTimers();
-  });
-
-  test("should call filler when conditions are met", () => {
-    document.body.innerHTML = `
-      <div id="headlessui-dialog-panel">
-        <div>Reach out to John at...</div>
-        <textarea></textarea>
-      </div>
-    `;
-
-    const mutationList = [
+describe("shouldUpdate", () => {
+  test("should return true if a node with id 'headlessui-portal-root' is found", () => {
+    const arrayList = [
       {
-        addedNodes: [
-          {
-            id: "headlessui-portal-root",
-          },
-        ],
+        addedNodes: [{ id: "not-relevant" }],
+      },
+      {
+        addedNodes: [{ id: "headlessui-portal-root" }],
       },
     ];
-
-    const fillerSpy = jest.spyOn(module, "filler");
-
-    handleMutation(mutationList);
-
-    jest.advanceTimersByTime(300);
-    expect(fillerSpy).toHaveBeenCalled();
+    expect(shouldUpdate(arrayList)).toBe(true);
   });
 
-  test("should not call filler when conditions are not met", () => {
-    const mutationList = [
+  test("should return false if no node with id 'headlessui-portal-root' is found", () => {
+    const arrayList = [
       {
-        addedNodes: [
-          {
-            id: "unrelated-element",
-          },
-        ],
+        addedNodes: [{ id: "not-relevant" }],
+      },
+      {
+        addedNodes: [{ id: "another-not-relevant" }],
       },
     ];
+    expect(shouldUpdate(arrayList)).toBe(false);
+  });
 
-    const fillerSpy = jest.spyOn(module, "filler");
+  test("should return false if an empty array is provided", () => {
+    const arrayList = [];
+    expect(shouldUpdate(arrayList)).toBe(false);
+  });
 
-    handleMutation(mutationList);
-
-    jest.advanceTimersByTime(300);
-    expect(fillerSpy).not.toHaveBeenCalled();
+  test("should return false if undefined or null is provided", () => {
+    expect(shouldUpdate(undefined)).toBe(false);
+    expect(shouldUpdate(null)).toBe(false);
   });
 });

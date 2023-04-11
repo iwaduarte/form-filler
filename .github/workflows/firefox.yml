@@ -3,7 +3,7 @@ name: Deploy to Firefox Add-on Store
 on:
   push:
     branches:
-      - main
+      - skipped
 
 jobs:
   deploy:
