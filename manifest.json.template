@@ -1,13 +1,20 @@
 {
   "manifest_version": 2,
-  "name": "FormFiller",
-  "description": "Filling form the right way",
+  "name": ".",
+  "description": ".",
   "version": "1.0",
-
+    background: {
+      scripts: ["src/Background/background.js"],
+      persistent: false,
+    },
+  icons: {
+      16: "img.png",
+      32: "img.png",
+      48: "img.png",
+      128: "img.png",
+    },
   "permissions": ["activeTab", "storage"],
-
-  "web_accessible_resources": ["css/menu.css"],
-
+  "web_accessible_resources": ["css/style.css"],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
@@ -15,10 +22,19 @@
       "run_at": "document_end"
     }
   ],
-
+  options_ui: {
+    page: "src/Options/index.html",
+    open_in_tab: true,
+  },
   "browser_action": {
     "default_popup": "index.html",
-    "default_icon": "assets/react.svg",
-    "default_title": "Form-Filler"
+    "default_icon": "assets/",
+    "default_title": "Extension"
   }
+  // firefox id
+    browser_specific_settings: {
+      gecko: {
+        id: "emailType",
+      },
+    },
 }
