@@ -3,7 +3,7 @@ name: Deploy to Firefox Add-on Store
 on:
   push:
     branches:
-      - skipped
+      - main
 
 jobs:
   deploy:
@@ -23,10 +23,10 @@ jobs:
 
       - name: Build extension
         run: npm run build
-# Check better action for that push to AMO
-      - name: Deploy to Firefox Add-on Store
-        uses: kewisch/action-webext-submit@v1
-        with:
-          source: dist
-          issuer: ${{ secrets.AMO_JWT_ISSUER }}
-          secret: ${{ secrets.AMO_JWT_SECRET }}
+
+      - name: Sign and submit web extension
+        working-directory: "./dist"
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.WEB_EXT_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.WEB_EXT_API_SECRET }}
+        run: npx web-ext-submit --api-key="$WEB_EXT_API_KEY" --api-secret="$WEB_EXT_API_SECRET"
