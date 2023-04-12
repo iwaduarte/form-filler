@@ -27,6 +27,6 @@ jobs:
       - name: Sign and submit web extension
         working-directory: "./dist"
         env:
-          WEB_EXT_API_KEY: ${{ secrets.WEB_EXT_API_KEY }}
-          WEB_EXT_API_SECRET: ${{ secrets.WEB_EXT_API_SECRET }}
+          WEB_EXT_API_KEY: ${{ secrets.FF_WEB_EXT_API_KEY }}
+          WEB_EXT_API_SECRET: ${{ secrets.FF_WEB_EXT_API_SECRET }}
         run: npx web-ext-submit --api-key="$WEB_EXT_API_KEY" --api-secret="$WEB_EXT_API_SECRET"
