@@ -12,7 +12,7 @@ describe("filler function", () => {
   test("should fill the textarea with the message", () => {
     document.body.innerHTML = `
       <div class="styles_modal__MFCOh">
-        <textarea placeholder="Write a note to John at..."></textarea>
+        <textarea id="hasId" placeholder="Write a note to John at..."></textarea>
       </div>
     `;
     const fields = [{ name: "Good Fit", value: "Hello #USER#!" }];
