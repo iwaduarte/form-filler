@@ -19,8 +19,8 @@ const shouldUpdate = (arrayList) => {
   return document.querySelector(".styles_modal__MFCOh textarea");
 };
 const filler = (fields = []) => {
-  console.log("Filling textArea");
-  const [textArea] = document.getElementsByTagName("textarea") || [];
+  console.log("[Wellfound] Filling textArea");
+  const [textArea] = Array.from(document.getElementsByTagName("textarea")).filter((e) => e.id);
 
   if (!textArea) return;
 
