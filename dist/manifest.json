@@ -1,0 +1,45 @@
+{
+  "description": "Filling forms the right way",
+  "name": "Form Filler",
+  "version": "0.0.2",
+  "manifest_version": 2,
+  "background": {
+    "persistent": false,
+    "page": "background.html"
+  },
+  "icons": {
+    "16": "form-filler.png",
+    "32": "form-filler.png",
+    "48": "form-filler.png",
+    "128": "form-filler.png"
+  },
+  "options_ui": {
+    "page": "src/Options/index.html",
+    "open_in_tab": true
+  },
+  "browser_action": {
+    "default_icon": "form-filler.png",
+    "default_title": "Form-Filler",
+    "default_popup": "src/Popup/index.html"
+  },
+  "web_accessible_resources": [
+    "src/ContentScript/main.jsx",
+    "assets/src/ContentScript/main.aea35906.js",
+    "assets/jsx-runtime.9f2e8f40.js",
+    "assets/cacheData.cec2e34a.js",
+    "assets/file.38dddfa9.js",
+    "assets/main.9bb94ccb.css",
+    "*.js"
+  ],
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage",
+    "<all_urls>"
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "form-filler@iwaduarte.dev"
+    }
+  }
+}
