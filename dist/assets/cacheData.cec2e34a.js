@@ -1,1 +1,0 @@
-const e={url:"",fields:{},whiteList:{"boards.greenhouse.io":!0,"apply.workable.com":!0,"jobs.lever.co":!0,"angel.co":!0,"wellfound.com":!0,"workatastartup.com":!0},isEnabled:!1,timeoutId:0,file:null};export{e as d};

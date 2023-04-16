@@ -13,13 +13,13 @@ Form-Filler is a powerful browser extension designed to make your life easier by
 ### Google Chrome and other Chromium-based browsers 🌐
 Since Form-Filler does not support Manifest V3, you can install the extension manually by following these steps:
 
-1. Download the **dist**  folder from the repository (open link on a new tab) [here](https://download-directory.github.io/?url=https%3A%2F%2Fgithub.com%2Fiwaduarte%2Fform-filler%2Ftree%2Fmain%2Fdist)
+1. Download the **dist**  folder from the repository (open link on a new tab) [here](https://github.com/iwaduarte/form-filler/releases/latest/download/dist.zip)
 2. Unzip the downloaded file.
 3. Open Google Chrome or another Chromium-based browser.
 4. Navigate to **chrome://extensions** in your browser.
 5. Enable **"Developer mode"** by toggling the switch in the top-right corner.
-6. Click in **Load unpacked** and select the dist folder.
-7. Confirm the installation by clicking on "Add extension" in the prompt.
+6. Click in **Load unpacked** and select the dist folder unpacked on step 1.
+
 
 ### Firefox 🦊
 Form-Filler is also available for Firefox users. You can install it through the following link:
