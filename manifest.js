@@ -21,7 +21,7 @@ const manifest = {
     default_popup: "src/Popup/index.html",
   },
   web_accessible_resources: ["src/ContentScript/main.jsx"],
-  permissions: ["activeTab", "tabs", "storage", "management", "<all_urls>"],
+  permissions: ["activeTab", "tabs", "storage", "<all_urls>"],
   browser_specific_settings: {
     gecko: {
       id: "form-filler@iwaduarte.dev",
