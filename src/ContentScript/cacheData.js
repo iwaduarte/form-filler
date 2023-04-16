@@ -9,7 +9,7 @@ const data = {
     "wellfound.com": true,
     "workatastartup.com": true,
   },
-  isEnabled: false,
+  isEnabled: true,
   timeoutId: 0,
   file: null,
 };

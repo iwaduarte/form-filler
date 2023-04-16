@@ -77,11 +77,11 @@ const startApplication = async (pdfFile, siteConfiguration, data) => {
   data.url = url;
   const { config, handleMutation, filler, watchSelector } = siteConfiguration[url] || {};
   const fillForms = filler || defaultFiller;
-  const { isEnabled = false, formFiller = [], whiteList = {} } = (await getFromStore(null)) || {};
+  const { isEnabled, formFiller = [], whiteList = {} } = (await getFromStore(null)) || {};
 
   data.whiteList = { ...data.whiteList, ...whiteList };
   data.fields = formFiller;
-  data.isEnabled = isEnabled;
+  data.isEnabled = isEnabled ?? data.isEnabled;
 
   const component = (
     <React.StrictMode>
