@@ -20,5 +20,6 @@ const executeContentScript = async () => {
     }
   );
 };
+tabs.onActivated.addListener(executeContentScript);
 
 tabs.onUpdated.addListener(executeContentScript);
