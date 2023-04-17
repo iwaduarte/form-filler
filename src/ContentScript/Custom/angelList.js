@@ -25,7 +25,7 @@ const filler = (fields = []) => {
   if (!textArea) return;
 
   const { value } = fields.find((field) => field.name === "Good Fit") || {};
-  if (!value) return;
+  if (!value) return console.log("[Wellfound] Missing Property - Good Fit");
 
   const userName = textArea?.placeholder?.replace(/Write a note to (.+) at.+/, "$1");
   textArea.value = value?.replace("#USER#", userName);

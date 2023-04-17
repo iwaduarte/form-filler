@@ -22,7 +22,7 @@ const handleMutation = (mutationList) => {
 };
 
 const filler = (fields = []) => {
-  console.log("filling textArea yC");
+  console.log("[yC] filling textArea");
   const modal = document.querySelector('[id^="headlessui-dialog-panel"]');
   const [textArea] = document.getElementsByTagName("textarea");
 
@@ -31,7 +31,7 @@ const filler = (fields = []) => {
   if (!modalTitle || !textArea) return;
 
   const { value } = fields.find((field) => field.name === "Good Fit") || {};
-  if (!value) return;
+  if (!value) return console.log("[YCombinator] Missing Property - Good Fit");
 
   const userName = modalTitle?.replace(/Reach out to (.+) at.+/, "$1");
   textArea.value = value?.replace("#USER#", userName);
