@@ -1,10 +1,11 @@
 # Form-Filler 📝
 
-Form-Filler is a powerful browser extension designed to make your life easier by automatically filling out online forms with data from your PDF files, such as CVs or resumes. With a simple and intuitive user interface, Form-Filler allows you to add custom properties and a PDF file to be used for filling forms on the web.
+Form-Filler is a powerful browser extension designed to make your life easier by automatically filling out online forms by automatically populating fields with pre-configured data, as well as automatically attaching your pre-configured PDF resume to the relevant field in  online forms. Featuring a straightforward and intuitive user interface, Form-Filler enables users to add custom properties and a PDF file, making form completion on the web a seamless and efficient experience.
 
 ## Features 🌟
 
-- Automatically fill forms with data from your PDF file (CV/Resume)
+- Automatically fill forms with pre-configured data
+- Automatically upload  pre-configured pdf files
 - Add custom properties for form-filling
 - Enable/disable the extension with a toggle switch
 - Supports Google Chrome, other Chromium-based browsers, and Firefox
