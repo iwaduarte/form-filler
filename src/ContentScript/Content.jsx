@@ -7,8 +7,10 @@ const Content = ({ fields = [] }) => {
   const [menuPositionLeft, setMenuPositionLeft] = useState(500);
 
   const handleClickOutside = (e) => {
-    const tagName = e.target.tagName.toLowerCase();
-    if (tagName === "input" || tagName === "textarea") return false;
+    [];
+    const { tagName: _tagName, type } = e.target;
+    const tagName = _tagName.toLowerCase();
+    if ((tagName === "input" && type !== "checkbox") || tagName === "textarea") return false;
     setDisplayList(false);
   };
 
