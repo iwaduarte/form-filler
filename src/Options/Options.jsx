@@ -127,8 +127,8 @@ const Options = () => {
   }, []);
 
   return (
-    <div className=" bg-custom-gradient h-screen">
-      <div className="max-w-[60%] py-6 px-5 md:px-10 shadow-md  text-gray-800 ">
+    <div className=" bg-custom-gradient">
+      <div className="max-w-[80%] py-6 px-5 md:px-10 shadow-md  text-gray-800 ">
         <div className="flex justify-between mb-4">
           <h1 className="text-[32px] font-bold text-gray-700 inline">
             <img className="w-8 h-8 mr-[-6px] inline-block" alt="logo" src={formFiller} />
@@ -178,10 +178,10 @@ const Options = () => {
             </h2>
             <ul className="list-none list-inside text-xs space-y-2">
               <li className={`${checkBulletPoint}`}>
-                Angel List | WellFound (angel.co | wellfound.com) -> Good Fit property name is used to automatic fill
+                Angel List | WellFound (angel.co | wellfound.com) -&gt; Good Fit property name is used to automatic fill
               </li>
               <li className={checkBulletPoint}>
-                Y Combinator (workatstartup.com) -> Good Fit property name is used to automatic fill
+                Y Combinator (workatstartup.com) -&gt; Good Fit property name is used to automatic fill
               </li>
             </ul>
           </div>
@@ -240,17 +240,17 @@ const Options = () => {
         <div className="text-gray-800 text-left text-lg font-bold tracking-normal leading-tight mb-2">
           Automatic Fill:
         </div>
-        <div className="properties mb-4 py-3 border-b border-[#ead6d6] border-sky-500 ">
+        <div className="properties w-[50%] mb-4 py-3 border-b border-[#ead6d6] border-sky-500 ">
           <h1 className="text-gray-800 text-left text-sm font-bold tracking-normal leading-tight mb-4">Properties</h1>
-          <ul className="flex flex-col max-h-[22vh] justify-self-start overflow-y-auto">
+          <ul className="flex flex-col max-h-[30vh] overflow-y-auto">
             {inputs?.map((input, index) => {
               const { name, value } = input;
               const propertyAliases = aliases[name] || [];
 
               return (
                 <li key={index} className="flex gap-4 items-baseline py-2 border-y border-gray-300">
-                  <div className="text-left grow-0 shrink-0 font-bold basis-10">{name}:</div>
-                  <div className="basis-36 grow-0 shrink-0 text-left"> {value}</div>
+                  <div className="text-left w-24 break-words font-bold ">{name}:</div>
+                  <div className="w-32 break-words whitespace-normal text-left"> {value}</div>
                   <ul className="basis-24 grow-0 shrink-0 flex flex-col min-w-0 flex-wrap items-start">
                     <span className="text-gray-600 text-left font-bold">Aliases:</span>
                     {propertyAliases.map((alias, aliasIndex) => (
@@ -268,7 +268,7 @@ const Options = () => {
                       </li>
                     ))}
                   </ul>
-                  <div className="shrink-0 grow">
+                  <div className="">
                     <input
                       id="alias"
                       type="text"
