@@ -2,7 +2,7 @@ import pkg from "./package.json" assert { type: "json" };
 
 const manifest = {
   background: {
-    scripts: ["src/Background/background.js"],
+    scripts: ["src/Background/background.js", "src/Background/hotreload.js"],
     persistent: false,
   },
   icons: {
@@ -20,7 +20,6 @@ const manifest = {
     default_title: "Form-Filler",
     default_popup: "src/Popup/index.html",
   },
-  web_accessible_resources: ["src/ContentScript/main.jsx"],
   permissions: ["activeTab", "tabs", "storage", "<all_urls>"],
   browser_specific_settings: {
     gecko: {
