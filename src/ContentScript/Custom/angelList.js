@@ -18,16 +18,19 @@ const shouldUpdate = (arrayList) => {
 
   return document.querySelector(".styles_modal__MFCOh textarea");
 };
-const filler = (fields = []) => {
+const filler = (fields = [], element) => {
   console.log("[Wellfound] Filling textArea");
-  const [textArea] = Array.from(document.getElementsByTagName("textarea")).filter((e) => e.id);
-
+  const textArea = element || document.querySelector(".styles_modal__MFCOh textarea");
   if (!textArea) return;
 
-  const { value } = fields.find((field) => field.name === "Good Fit") || {};
-  if (!value) return console.log("[Wellfound] Missing Property - Good Fit");
+  const startupName = document.querySelector(".styles_startup__b9n5O")?.textContent;
+  const questions = document.querySelector(".styles_modal__MFCOh label div")?.textContent;
 
-  const userName = textArea?.placeholder?.replace(/Write a note to (.+) at.+/, "$1");
+  const { value } =
+    fields.find((field) => (questions ? questions.includes(field.name) : field.name === "Good Fit")) || {};
+  if (!value) return console.log("[Wellfound] Missing Property");
+
+  const userName = textArea?.placeholder?.replace(/Write a note to (\w+).+/, "$1") + " recruiter";
   textArea.value = value?.replace("#USER#", userName);
   textArea.dispatchEvent(new Event("change", { bubbles: true }));
 };
@@ -35,7 +38,8 @@ const filler = (fields = []) => {
 const handleMutation = (mutationList) => {
   clearTimeout(data.timeoutId);
   data.timeoutId = setTimeout(() => {
-    shouldUpdate(mutationList) && filler(data.fields);
+    const element = shouldUpdate(mutationList);
+    element && filler(data.fields, element);
   }, 600);
 };
 
