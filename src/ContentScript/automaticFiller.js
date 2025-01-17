@@ -5,8 +5,91 @@ const autoFiller = {
   "boards.greenhouse.io": autoFillerSelect,
 };
 
+/**
+ * Finds the first non-empty text above `elem` by traversing previous siblings
+ * and, if needed, moving up to the parent and continuing from its previous siblings.
+ * Returns an object:
+ *   {
+ *     text: <string>,      // The actual text found
+ *     node: <DOM Node>     // Where the text was found (could be a text node or an element)
+ *   }
+ */
+const findFirstTextAbove = (elem) => {
+  let current = elem;
+
+  while (current) {
+    let sibling = current.previousSibling;
+    while (sibling) {
+      if (sibling.nodeType === Node.TEXT_NODE && sibling.textContent.trim()) {
+        return {
+          text: sibling.textContent.trim(),
+          node: sibling,
+        };
+      }
+      if (sibling.nodeType === Node.ELEMENT_NODE && sibling.textContent.trim()) {
+        return {
+          text: sibling.textContent.trim(),
+          node: sibling,
+        };
+      }
+      sibling = sibling.previousSibling;
+    }
+    current = current.parentElement;
+  }
+
+  return { text: "", node: null };
+};
+
+function isVisible(elem) {
+  if (!elem) return false;
+  const style = window.getComputedStyle(elem);
+  if (style.display === "none" || style.visibility === "hidden") {
+    return false;
+  }
+  return !(elem.offsetWidth <= 0 && elem.offsetHeight <= 0);
+}
+
+const getInputsAndLabels = () => {
+  const form = document.querySelector("form");
+
+  if (!form) return [];
+
+  const allFields = form.querySelectorAll(
+    "input:not([type=button]):not([type=submit]):not([type=reset]):not([type=hidden]), textarea, select"
+  );
+  const visibleFields = Array.from(allFields).filter((field) => isVisible(field));
+  const elements = visibleFields.map((field) => {
+    const nameAttr = field.getAttribute("name") || "";
+    // For <input> let's get type=..., for <textarea>/<select> let's just say "textarea" or "select"
+    const fieldTag = field.tagName.toLowerCase();
+    const fieldType = fieldTag === "input" ? "input_" + (field.getAttribute("type") || "text") : fieldTag;
+
+    const { text, node } = findFirstTextAbove(field);
+
+    // If the text is in an element node, we can store it directly; if it’s a text node, no "surroundingElement"
+    const surroundingTextElement = node && node.nodeType === Node.ELEMENT_NODE ? node : null;
+
+    return {
+      element: field,
+      name: nameAttr,
+      type: fieldType,
+      text,
+      surroundingTextElement,
+    };
+  });
+
+  if (elements.length === 1 && elements[0].type === "input_file") {
+    return [];
+  }
+  return elements;
+};
+
 const defaultFiller = (fields = [], file = data.file) => {
-  inputFiller(fields);
+  console.log("Default...");
+
+  const shouldUpdateFile = inputFiller(fields);
+
+  if (!shouldUpdateFile) return;
 
   const fileInput = document.querySelector("input[type='file']");
 
@@ -50,25 +133,22 @@ const updateElementValue = (element, value) => {
 };
 
 const inputFiller = (fields = []) => {
-  const allLabels = Array.from(document.querySelectorAll("LABEL, LEGEND"));
-  allLabels.map((label) => {
-    const { htmlFor, innerText } = label;
+  const allInputs = getInputsAndLabels();
+
+  if (!allInputs.length) return false;
+
+  return allInputs.map((label) => {
+    const { text, element, type } = label;
 
     const { value } =
-      fields.find(
-        ({ name, aliases = [] }) =>
-          innerText?.toLowerCase().includes(name?.toLowerCase()) ||
-          aliases?.some((alias) => innerText?.toLowerCase().includes(alias?.toLowerCase()))
-      ) || {};
+      fields.find(({ name, aliases = [] }) => text?.includes(name) || aliases?.some((alias) => text.includes(alias))) ||
+      {};
 
     if (!value) return null;
 
-    const input = htmlFor
-      ? document.getElementById(htmlFor) || document.querySelector(`input[name="${htmlFor}"]`)
-      : label?.querySelector("input[type='text'],input[type='email'],textarea") ||
-        label?.parentNode.querySelector("input[type='text'],input[type='email'],textarea");
+    const input = type.includes("input_") && element;
+    const select = type === "select" && element;
 
-    const select = label?.querySelector("select");
     const indexSelect = select && matchSelectValue(value, select);
 
     if (!input && !select) return null;
