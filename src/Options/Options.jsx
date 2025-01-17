@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import trashSVG from "./assets/trash.svg";
+import importIcon from "./assets/import.svg";
+import exportIcon from "./assets/export.svg";
 import {
   addProperty,
   addWhiteList,
@@ -97,6 +99,34 @@ const Options = () => {
     setFile(file);
   };
 
+  const handleImportConfig = async (event) => {
+    const file = event.target.files[0];
+
+    if (!file) return;
+    if (file.type !== "application/json") {
+      console.log("Please upload a valid JSON file.");
+      return;
+    }
+    const fileContent = await file.text();
+    const importedData = JSON.parse(fileContent);
+    await Promise.all(Object.keys(importedData).map(async (key) => setStore(importedData[key], key)));
+    setSync((prev) => !prev);
+    console.log("Imported Data successfully:", importedData);
+  };
+  const handleDownloadConfig = async () => {
+    const storeData = await getFromStore(null);
+    delete storeData.isEnabled;
+    delete storeData.file;
+
+    const jsonBlob = new Blob([JSON.stringify(storeData, null, 2)], { type: "application/json" });
+    const jsonUrl = URL.createObjectURL(jsonBlob);
+    const jsonLink = document.createElement("a");
+    jsonLink.href = jsonUrl;
+    jsonLink.download = "store-data.json"; // Filename for the JSON
+    jsonLink.click();
+    URL.revokeObjectURL(jsonUrl);
+  };
+
   useEffect(() => {
     getFromStore(null).then((data) => {
       const { formFiller = [], isEnabled: _isEnabled = true, whiteList } = data || {};
@@ -135,23 +165,42 @@ const Options = () => {
             orm-Filler Options
           </h1>
 
-          <div className="flex items-center">
-            <span className="mr-1">OFF</span>
-            <div className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
-              <input
-                id="toggle"
-                type="checkbox"
-                name="toggle"
-                checked={isEnabled}
-                onChange={handleChange}
-                className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
-              />
+          <div className="flex gap-4 items-center">
+            <div className="flex items-center ">
               <label
-                htmlFor="toggle"
-                className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer text-xs text-gray-700"
-              ></label>
+                className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-150 ease-in-out hover:bg-gray-300 bg-gray-100 text-gray-600 rounded-full p-2 text-sm"
+                title="Import Config"
+              >
+                <input onChange={handleImportConfig} id="json-upload" type="file" className="hidden" />
+                <img src={importIcon} alt="Import Config" className="w-4 h-4" />
+              </label>
+
+              <button
+                onClick={handleDownloadConfig}
+                className="focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-400 transition duration-150 ease-in-out hover:bg-gray-300 bg-gray-100 text-gray-600 rounded-full p-2 text-sm"
+                title="Export Config"
+              >
+                <img src={exportIcon} alt="Clear Config" className="w-4 h-4" />
+              </button>
             </div>
-            <span className="ml-1">ON</span>
+            <div>
+              <span className="mr-1">OFF</span>
+              <div className="relative inline-block w-10 align-middle select-none transition duration-200 ease-in">
+                <input
+                  id="toggle"
+                  type="checkbox"
+                  name="toggle"
+                  checked={isEnabled}
+                  onChange={handleChange}
+                  className="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"
+                />
+                <label
+                  htmlFor="toggle"
+                  className="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer text-xs text-gray-700"
+                ></label>
+              </div>
+              <span className="ml-1">ON</span>
+            </div>
           </div>
         </div>
         <div className="flex my-4 gap-8">
@@ -240,7 +289,7 @@ const Options = () => {
         <div className="text-gray-800 text-left text-lg font-bold tracking-normal leading-tight mb-2">
           Automatic Fill:
         </div>
-        <div className="properties w-[50%] mb-4 py-3 border-b border-[#ead6d6] border-sky-500 ">
+        <div className="properties max-w-[1000px] mb-4 py-3 border-b border-[#ead6d6] border-sky-500 ">
           <h1 className="text-gray-800 text-left text-sm font-bold tracking-normal leading-tight mb-4">Properties</h1>
           <ul className="flex flex-col max-h-[30vh] overflow-y-auto">
             {inputs?.map((input, index) => {
