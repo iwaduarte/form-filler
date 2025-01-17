@@ -9,8 +9,8 @@ export default defineConfig({
     react(),
     webExtension({
       manifest,
-      webAccessibleScripts: {
-        include: /\.([cem]?js|jsx|ts)$/,
+      additionalInputs: {
+        scripts: ["src/ContentScript/main.jsx"],
       },
     }),
   ],
