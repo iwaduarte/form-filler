@@ -5,6 +5,29 @@ const autoFiller = {
   "boards.greenhouse.io": autoFillerSelect,
 };
 
+const stripPunctuation = (text) => {
+  return text.replace(/[^a-zA-Z0-9À-ž\s]+/g, "").trim();
+};
+
+const getTextIgnoringSelectsAndOptions = (element) => {
+  let result = "";
+  // Loop through all child nodes (both elements and text nodes)
+  for (const node of element.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      // Plain text node => add to result
+      result += node.textContent;
+    } else if (node.nodeType === Node.ELEMENT_NODE) {
+      // If the element is <select> or <option>, skip it entirely
+      if (node.nodeName.toLowerCase() === "select" || node.nodeName.toLowerCase() === "option") {
+        continue;
+      }
+      // Otherwise, recurse into children
+      result += getTextIgnoringSelectsAndOptions(node);
+    }
+  }
+  return result;
+};
+
 /**
  * Finds the first non-empty text above `elem` by traversing previous siblings
  * and, if needed, moving up to the parent and continuing from its previous siblings.
@@ -20,17 +43,47 @@ const findFirstTextAbove = (elem) => {
   while (current) {
     let sibling = current.previousSibling;
     while (sibling) {
-      if (sibling.nodeType === Node.TEXT_NODE && sibling.textContent.trim()) {
-        return {
-          text: sibling.textContent.trim(),
-          node: sibling,
-        };
+      if (sibling.nodeType === Node.TEXT_NODE) {
+        // Skip if it's empty after trim
+        if (!sibling.textContent.trim()) {
+          sibling = sibling.previousSibling;
+          continue;
+        }
+
+        // Skip if parent is <select> or <option>
+        const parentTag = sibling.parentElement?.nodeName.toLowerCase();
+        if (parentTag === "select" || parentTag === "option") {
+          sibling = sibling.previousSibling;
+          continue;
+        }
+
+        const rawText = sibling.textContent.trim();
+        const strippedText = stripPunctuation(rawText);
+
+        if (strippedText.length > 0) {
+          return {
+            text: rawText, // Or use strippedText if you prefer to return the cleaned version
+            node: sibling,
+          };
+        }
       }
-      if (sibling.nodeType === Node.ELEMENT_NODE && sibling.textContent.trim()) {
-        return {
-          text: sibling.textContent.trim(),
-          node: sibling,
-        };
+      if (sibling.nodeType === Node.ELEMENT_NODE) {
+        const tag = sibling.nodeName.toLowerCase();
+        // Skip <option> elements
+        // Skip if this element is <select> or <option>
+        if (tag === "select" || tag === "option") {
+          sibling = sibling.previousSibling;
+          continue;
+        }
+
+        // Otherwise, let's get *partial* text ignoring <select>/<option> inside
+        const rawText = getTextIgnoringSelectsAndOptions(sibling).trim();
+        if (rawText) {
+          const stripped = stripPunctuation(rawText);
+          if (stripped.length > 0) {
+            return { text: rawText, node: sibling };
+          }
+        }
       }
       sibling = sibling.previousSibling;
     }
@@ -40,23 +93,28 @@ const findFirstTextAbove = (elem) => {
   return { text: "", node: null };
 };
 
-function isVisible(elem) {
+const isVisible = (elem) => {
   if (!elem) return false;
   const style = window.getComputedStyle(elem);
   if (style.display === "none" || style.visibility === "hidden") {
     return false;
   }
   return !(elem.offsetWidth <= 0 && elem.offsetHeight <= 0);
-}
+};
 
 const getInputsAndLabels = () => {
-  const form = document.querySelector("form");
+  const forms = document.querySelectorAll("form");
 
-  if (!form) return [];
+  const fieldSelector =
+    "input:not([type=button]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]), textarea, select";
 
-  const allFields = form.querySelectorAll(
-    "input:not([type=button]):not([type=submit]):not([type=reset]):not([type=hidden]), textarea, select"
-  );
+  const documentFields = [...document.querySelectorAll(fieldSelector)];
+  const formFields = forms.length ? [...forms].flatMap((form) => [...form.querySelectorAll(fieldSelector)]) : [];
+
+  const allFieldsSet = new Set([...documentFields, ...formFields]);
+
+  const allFields = [...allFieldsSet];
+
   const visibleFields = Array.from(allFields).filter((field) => isVisible(field));
   const elements = visibleFields.map((field) => {
     const nameAttr = field.getAttribute("name") || "";
@@ -89,9 +147,23 @@ const defaultFiller = (fields = [], file = data.file) => {
 
   const shouldUpdateFile = inputFiller(fields);
 
-  if (!shouldUpdateFile) return;
-
+  if (!shouldUpdateFile || !shouldUpdateFile.length) return;
   const fileInput = document.querySelector("input[type='file']");
+  const { text = "" } = findFirstTextAbove(fileInput) || {};
+  const firstText = text.toLowerCase();
+  const fileInputName = fileInput.name ? fileInput.name.toLowerCase() : "";
+  const MINIMUM_SIZE_ACCEPTABLE_FOR_UPDATE = 4;
+
+  if (
+    !fileInputName?.includes("resume") &&
+    !fileInputName?.includes("cv") &&
+    !fileInputName?.includes("currículo") &&
+    !firstText?.includes("resume") &&
+    !firstText?.includes("currículo") &&
+    !firstText?.includes("cv") &&
+    shouldUpdateFile.length < MINIMUM_SIZE_ACCEPTABLE_FOR_UPDATE
+  )
+    return;
 
   if (!fileInput || !data.file) return;
 
@@ -110,15 +182,15 @@ const defaultFiller = (fields = [], file = data.file) => {
 const matchSelectValue = (desiredValue, selectElem) => {
   if (!desiredValue || !selectElem) return null;
   const { options } = selectElem;
-  const { value } =
-    Array.from(options).find((option) => {
-      if (option.innerText === desiredValue) {
-        option.selected = true;
-        return true;
-      }
-    }) || {};
-
-  return value;
+  const foundOption = Array.from(options).find(
+    (option) => option.innerText === desiredValue || option.value === desiredValue
+  );
+  if (foundOption) {
+    foundOption.selected = true;
+    selectElem.dispatchEvent(new Event("change", { bubbles: true, cancelable: false }));
+    console.log(`Selected option: ${foundOption.innerText}`);
+    return foundOption.value;
+  }
 };
 
 const updateElementValue = (element, value) => {
@@ -132,35 +204,52 @@ const updateElementValue = (element, value) => {
   }
 };
 
+const escapeRegExp = (string) => string.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&");
+
+const matchesWholeWord = (text, word) => {
+  if (!text || !word) return false;
+  const pattern = new RegExp(`\\b${escapeRegExp(word)}\\b`, "i");
+  return pattern.test(text);
+};
+
 const inputFiller = (fields = []) => {
   const allInputs = getInputsAndLabels();
+  console.log(allInputs);
 
   if (!allInputs.length) return false;
 
-  return allInputs.map((label) => {
-    const { text, element, type } = label;
+  return allInputs
+    .map((label) => {
+      const { text, element, type } = label;
 
-    const { value } =
-      fields.find(({ name, aliases = [] }) => text?.includes(name) || aliases?.some((alias) => text.includes(alias))) ||
-      {};
+      const { value } =
+        fields.find(({ name, aliases = [] }) => {
+          // Check if text contains "name" as a whole word
+          if (matchesWholeWord(text, name)) {
+            return true;
+          }
+          // Or check any of the aliases
+          return aliases.some((alias) => matchesWholeWord(text, alias));
+        }) || {};
 
-    if (!value) return null;
+      if (!value) return null;
 
-    const input = type.includes("input_") && element;
-    const select = type === "select" && element;
+      const input = type.includes("input_") && element;
+      const select = type === "select" && element;
 
-    const indexSelect = select && matchSelectValue(value, select);
+      if (!input && !select) return null;
 
-    if (!input && !select) return null;
+      const indexSelect = select && matchSelectValue(value, select);
 
-    input && updateElementValue(input, value);
+      input && updateElementValue(input, value);
 
-    if (select && indexSelect && autoFiller[data.url]) {
-      autoFiller?.[data.url]?.(select, value);
-    }
+      if (select && indexSelect && autoFiller[data.url]) {
+        autoFiller?.[data.url]?.(select, value);
+      }
 
-    return true;
-  });
+      return true;
+    })
+    .filter(Boolean);
 };
 
 const defaultHandleMutation = (mutationList) => {
@@ -170,7 +259,9 @@ const defaultHandleMutation = (mutationList) => {
   data.timeoutId = setTimeout(() => {
     const shouldNotUpdate = mutationList.some((mutationRecord) => {
       const { addedNodes, target } = mutationRecord;
+      const isInsideForm = target.closest("form") !== null;
       return (
+        isInsideForm ||
         target.tagName === "INPUT" ||
         target.nodeName === "INPUT" ||
         target.nodeName === "SPAN" ||
@@ -179,6 +270,7 @@ const defaultHandleMutation = (mutationList) => {
         }).length
       );
     });
+
     if (shouldNotUpdate) return;
 
     return defaultFiller(data.fields);
@@ -189,7 +281,8 @@ const observeMutations = ({ config, handleMutation, watchSelector = "" }) => {
   if (data.isEnabled === false) return;
 
   const watchSelectors = ["#root", "#__next", "body"];
-  watchSelector && watchSelectors.unshift(watchSelector);
+  if (watchSelector) watchSelectors.unshift(watchSelector);
+
   const element = document.querySelector(watchSelectors.join(","));
   console.log("[element watched]", element);
   if (element) {
