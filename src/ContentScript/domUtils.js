@@ -9,10 +9,11 @@ import { stripPunctuation } from "./utils.js";
  *     node: <DOM Node>     // Where the text was found (could be a text node or an element)
  *   }
  */
-const findFirstTextAbove = (elem) => {
+const findFirstTextAbove = (elem, maxDepth = 5) => {
   let current = elem;
+  let depth = 0;
 
-  while (current) {
+  while (current && depth < maxDepth) {
     let sibling = current.previousSibling;
     while (sibling) {
       if (sibling.nodeType === Node.TEXT_NODE) {
@@ -39,6 +40,7 @@ const findFirstTextAbove = (elem) => {
           };
         }
       }
+
       if (sibling.nodeType === Node.ELEMENT_NODE) {
         const tag = sibling.nodeName.toLowerCase();
         // Skip <option> elements
@@ -60,6 +62,7 @@ const findFirstTextAbove = (elem) => {
       sibling = sibling.previousSibling;
     }
     current = current.parentElement;
+    depth++; // Increment depth at each parent level
   }
 
   return { text: "", node: null };
@@ -79,7 +82,7 @@ const getInputsAndLabels = () => {
 
   //removing search type
   const fieldSelector =
-    "input:not([type=button]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]), textarea, select";
+    "input:not([type=button]):not([type=checkbox]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]), textarea:not([inputmode='none']):not([aria-readonly='true']), select";
 
   const documentFields = [...document.querySelectorAll(fieldSelector)];
   const formFields = forms.length ? [...forms].flatMap((form) => [...form.querySelectorAll(fieldSelector)]) : [];
@@ -133,9 +136,6 @@ const getTextIgnoringSelectsAndOptions = (element) => {
   return result;
 };
 
-/**
- * Dispatches the 'real' user-value change events so frameworks can see it.
- */
 const updateElementValue = (element, value) => {
   element.focus();
 
@@ -144,6 +144,7 @@ const updateElementValue = (element, value) => {
   const nativeSetter = Object.getOwnPropertyDescriptor(element.__proto__, "value")?.set;
 
   if (nativeSetter) {
+    console.log("calling Native");
     nativeSetter.call(element, value);
   } else {
     // fallback if we can’t get the native setter
@@ -158,10 +159,6 @@ const updateElementValue = (element, value) => {
   element.blur();
 };
 
-/**
- * Simulates selection on a real <select> element.
- * Matches either the "option.value" or option text content.
- */
 const matchSelectValue = (selectEl, values) => {
   if (!selectEl || !values.length) return null;
 
@@ -209,69 +206,50 @@ const simulateReactDropdownSelect = async (containerEl, value) => {
     searchInput.dispatchEvent(new Event("change", { bubbles: true }));
     searchInput.blur();
   }
-  await new Promise((resolve) => setTimeout(resolve, 350));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   const matchedOption = containerEl.querySelector('[data-component-name="DropdownOption"]');
 
   if (matchedOption) dispatchClick(matchedOption);
 };
 
-const simulateCustomDropdown = (element, values) => {
-  if (!element) return;
+const simulateReactPhoneInput2Select = async (element, values) => {
+  console.log("react-tel-input");
+  const [, country] = values;
+  const flagElement = element.nextElementSibling.children[0];
+  dispatchClick(flagElement);
+  await new Promise((resolve) => setTimeout(resolve, 200));
+  const listItems = element.parentElement.querySelectorAll("li.country");
 
-  const parentElement = element.parentElement;
-  const parentElementClass = parentElement.classList[0];
-
-  if (parentElementClass === "react-dropdown-select") {
-    // 'react-dropdown-select'
-    return simulateReactDropdownSelect(parentElement, "+" + values[0]);
-  }
-
-  // li - ul react type
-
-  // 1) Open the dropdown. This can vary by implementation—sometimes you
-  // just click the containerEl, sometimes you click a child trigger element.
-  // Adjust the lines below to whichever approach your UI needs:
-  element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-  element.dispatchEvent(new MouseEvent("click", { bubbles: true }));
-
-  // 2) Once open, we look for the <li> items (assuming they are within containerEl
-  // or a sibling. If they are somewhere else, adjust your selector).
-  const listItems = element.querySelectorAll("li");
-
-  // 3) Try matching either data-value or text content to desiredValue
   for (const li of listItems) {
-    // Example: if the HTML is something like <li data-value="55">Brazil (+55)</li>
-    const dataVal = li.dataset.value || "";
-    const textVal = li.textContent?.trim() || "";
-
-    if (dataVal === values || textVal.toLowerCase().includes(values.toLowerCase())) {
-      // simulate user clicking that <li>
-      li.dispatchEvent(new MouseEvent("mousedown", { bubbles: true }));
-      li.dispatchEvent(new MouseEvent("click", { bubbles: true }));
+    const countryCode = li.dataset?.countryCode.toLowerCase() || "";
+    if (country.toLowerCase() === countryCode) {
+      dispatchClick(li);
       break;
     }
   }
-
-  // Optionally you can blur or do more to "close" the dropdown if needed
-  element.dispatchEvent(new MouseEvent("blur", { bubbles: true }));
+  await new Promise((resolve) => setTimeout(resolve, 200));
 };
 
-/**
- * "High-level" function that tries to set the country code in either
- * a real <select> or a custom dropdown.
- */
 const setCountryCode = (element, countryArray) => {
+  if (!element) return;
+
   const tag = element?.tagName?.toLowerCase() || "";
 
   if (tag === "select") {
     return matchSelectValue(element, countryArray);
   }
-  // if (tag === "input") {
-  //   return;
-  // }
-  //  Custom dropdown.
-  return simulateCustomDropdown(element, countryArray);
+
+  //  Custom dropdown for different select strategies libraries
+  //  (div's, input searches, lists (ul))
+  const parentElement = element.parentElement;
+  const parentElementClass = parentElement.classList[0];
+
+  // 'react-dropdown-select'
+  if (parentElementClass === "react-dropdown-select")
+    return simulateReactDropdownSelect(parentElement, "+" + countryArray[0]);
+
+  if (parentElementClass === "react-tel-input") return simulateReactPhoneInput2Select(element, countryArray);
 };
 
 export {
