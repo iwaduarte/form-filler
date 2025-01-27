@@ -39,7 +39,7 @@ const extractPhoneComponents = (phone) => {
   return {
     countryCode: String(countryCode),
     country: regionCode,
-    phoneNumber: number?.national,
+    phoneNumber: number?.significant,
   };
 };
 
