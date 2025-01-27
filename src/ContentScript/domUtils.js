@@ -137,15 +137,12 @@ const getTextIgnoringSelectsAndOptions = (element) => {
 };
 
 const updateElementValue = (element, value) => {
-  element.focus();
-
   // If the element has a native "value" property (e.g. real input),
   // we force-set it using the native setter, then dispatch events:
   const nativeSetter = Object.getOwnPropertyDescriptor(element.__proto__, "value")?.set;
 
   if (nativeSetter) {
-    console.log("calling Native");
-    nativeSetter.call(element, value);
+    nativeSetter.call(element, "+" + value);
   } else {
     // fallback if we can’t get the native setter
     element.value = value;
@@ -155,8 +152,6 @@ const updateElementValue = (element, value) => {
   // Fire events typically listened for by frameworks
   element.dispatchEvent(new Event("input", { bubbles: true }));
   element.dispatchEvent(new Event("change", { bubbles: true }));
-
-  element.blur();
 };
 
 const matchSelectValue = (selectEl, values) => {
@@ -228,7 +223,7 @@ const simulateReactPhoneInput2Select = async (element, values) => {
       break;
     }
   }
-  await new Promise((resolve) => setTimeout(resolve, 200));
+  await new Promise((resolve) => setTimeout(resolve, 250));
 };
 
 const setCountryCode = (element, countryArray) => {
