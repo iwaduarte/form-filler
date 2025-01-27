@@ -142,7 +142,7 @@ const updateElementValue = (element, value) => {
   const nativeSetter = Object.getOwnPropertyDescriptor(element.__proto__, "value")?.set;
 
   if (nativeSetter) {
-    nativeSetter.call(element, "+" + value);
+    nativeSetter.call(element, value);
   } else {
     // fallback if we can’t get the native setter
     element.value = value;
