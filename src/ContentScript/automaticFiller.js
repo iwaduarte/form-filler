@@ -1,153 +1,28 @@
 import { data } from "./cacheData.js";
 import { autoFillerSelect } from "./Custom/greenHouse.js";
+import {
+  findFirstTextAbove,
+  getElementSignature,
+  getInputsAndLabels,
+  isVisible,
+  matchSelectValue,
+  setCountryCode,
+  updateElementValue,
+} from "./domUtils.js";
+import { extractPhoneComponents, matchValues } from "./utils.js";
 
 const autoFiller = {
   "boards.greenhouse.io": autoFillerSelect,
 };
+const elementsFilled = new Set();
 
-const stripPunctuation = (text) => {
-  return text.replace(/[^a-zA-Z0-9À-ž\s]+/g, "").trim();
-};
-
-const getTextIgnoringSelectsAndOptions = (element) => {
-  let result = "";
-  // Loop through all child nodes (both elements and text nodes)
-  for (const node of element.childNodes) {
-    if (node.nodeType === Node.TEXT_NODE) {
-      // Plain text node => add to result
-      result += node.textContent;
-    } else if (node.nodeType === Node.ELEMENT_NODE) {
-      // If the element is <select> or <option>, skip it entirely
-      if (node.nodeName.toLowerCase() === "select" || node.nodeName.toLowerCase() === "option") {
-        continue;
-      }
-      // Otherwise, recurse into children
-      result += getTextIgnoringSelectsAndOptions(node);
-    }
-  }
-  return result;
-};
-
-/**
- * Finds the first non-empty text above `elem` by traversing previous siblings
- * and, if needed, moving up to the parent and continuing from its previous siblings.
- * Returns an object:
- *   {
- *     text: <string>,      // The actual text found
- *     node: <DOM Node>     // Where the text was found (could be a text node or an element)
- *   }
- */
-const findFirstTextAbove = (elem) => {
-  let current = elem;
-
-  while (current) {
-    let sibling = current.previousSibling;
-    while (sibling) {
-      if (sibling.nodeType === Node.TEXT_NODE) {
-        // Skip if it's empty after trim
-        if (!sibling.textContent.trim()) {
-          sibling = sibling.previousSibling;
-          continue;
-        }
-
-        // Skip if parent is <select> or <option>
-        const parentTag = sibling.parentElement?.nodeName.toLowerCase();
-        if (parentTag === "select" || parentTag === "option") {
-          sibling = sibling.previousSibling;
-          continue;
-        }
-
-        const rawText = sibling.textContent.trim();
-        const strippedText = stripPunctuation(rawText);
-
-        if (strippedText.length > 0) {
-          return {
-            text: rawText, // Or use strippedText if you prefer to return the cleaned version
-            node: sibling,
-          };
-        }
-      }
-      if (sibling.nodeType === Node.ELEMENT_NODE) {
-        const tag = sibling.nodeName.toLowerCase();
-        // Skip <option> elements
-        // Skip if this element is <select> or <option>
-        if (tag === "select" || tag === "option") {
-          sibling = sibling.previousSibling;
-          continue;
-        }
-
-        // Otherwise, let's get *partial* text ignoring <select>/<option> inside
-        const rawText = getTextIgnoringSelectsAndOptions(sibling).trim();
-        if (rawText) {
-          const stripped = stripPunctuation(rawText);
-          if (stripped.length > 0) {
-            return { text: rawText, node: sibling };
-          }
-        }
-      }
-      sibling = sibling.previousSibling;
-    }
-    current = current.parentElement;
-  }
-
-  return { text: "", node: null };
-};
-
-const isVisible = (elem) => {
-  if (!elem) return false;
-  const style = window.getComputedStyle(elem);
-  if (style.display === "none" || style.visibility === "hidden") {
-    return false;
-  }
-  return !(elem.offsetWidth <= 0 && elem.offsetHeight <= 0);
-};
-
-const getInputsAndLabels = () => {
-  const forms = document.querySelectorAll("form");
-
-  const fieldSelector =
-    "input:not([type=button]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]), textarea, select";
-
-  const documentFields = [...document.querySelectorAll(fieldSelector)];
-  const formFields = forms.length ? [...forms].flatMap((form) => [...form.querySelectorAll(fieldSelector)]) : [];
-
-  const allFieldsSet = new Set([...documentFields, ...formFields]);
-
-  const allFields = [...allFieldsSet];
-
-  const visibleFields = Array.from(allFields).filter((field) => isVisible(field));
-  const elements = visibleFields.map((field) => {
-    const nameAttr = field.getAttribute("name") || "";
-    // For <input> let's get type=..., for <textarea>/<select> let's just say "textarea" or "select"
-    const fieldTag = field.tagName.toLowerCase();
-    const fieldType = fieldTag === "input" ? "input_" + (field.getAttribute("type") || "text") : fieldTag;
-
-    const { text, node } = findFirstTextAbove(field);
-
-    // If the text is in an element node, we can store it directly; if it’s a text node, no "surroundingElement"
-    const surroundingTextElement = node && node.nodeType === Node.ELEMENT_NODE ? node : null;
-
-    return {
-      element: field,
-      name: nameAttr,
-      type: fieldType,
-      text,
-      surroundingTextElement,
-    };
-  });
-
-  if (elements.length === 1 && elements[0].type === "input_file") {
-    return [];
-  }
-  return elements;
-};
-
-const defaultFiller = (fields = [], file = data.file) => {
+const defaultFiller = async (fields = [], file = data.file) => {
   console.log("Default...");
 
-  const shouldUpdateFile = inputFiller(fields);
+  const shouldUpdateFile = await inputFiller(fields);
 
   if (!shouldUpdateFile || !shouldUpdateFile.length) return;
+
   const fileInput = document.querySelector("input[type='file']");
   const { text = "" } = findFirstTextAbove(fileInput) || {};
   const firstText = text.toLowerCase();
@@ -179,69 +54,76 @@ const defaultFiller = (fields = [], file = data.file) => {
   fileInput.dispatchEvent(event);
 };
 
-const matchSelectValue = (desiredValue, selectElem) => {
-  if (!desiredValue || !selectElem) return null;
-  const { options } = selectElem;
-  const foundOption = Array.from(options).find(
-    (option) => option.innerText === desiredValue || option.value === desiredValue
-  );
-  if (foundOption) {
-    foundOption.selected = true;
-    selectElem.dispatchEvent(new Event("change", { bubbles: true, cancelable: false }));
-    console.log(`Selected option: ${foundOption.innerText}`);
-    return foundOption.value;
-  }
-};
-
-const updateElementValue = (element, value) => {
-  element.value = value;
-  element.innerText = value;
-
-  try {
-    element.dispatchEvent(new Event("change", { bubbles: true, cancelable: false }));
-  } catch (error) {
-    console.log("error", error);
-  }
-};
-
-const escapeRegExp = (string) => string.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&");
-
-const matchesWholeWord = (text, word) => {
-  if (!text || !word) return false;
-  const pattern = new RegExp(`\\b${escapeRegExp(word)}\\b`, "i");
-  return pattern.test(text);
-};
-
-const inputFiller = (fields = []) => {
+const inputFiller = async (fields = []) => {
   const allInputs = getInputsAndLabels();
-  console.log(allInputs);
+  // console.log("allInputs", allInputs);
 
   if (!allInputs.length) return false;
 
-  return allInputs
-    .map((label) => {
-      const { text, element, type } = label;
+  const phoneMap = {};
 
-      const { value } =
-        fields.find(({ name, aliases = [] }) => {
-          // Check if text contains "name" as a whole word
-          if (matchesWholeWord(text, name)) {
-            return true;
-          }
-          // Or check any of the aliases
-          return aliases.some((alias) => matchesWholeWord(text, alias));
-        }) || {};
+  console.log(allInputs);
+
+  const filteredInputs = allInputs.filter((element) => {
+    const label = element.text?.toLowerCase() || "";
+    const name = element.name?.toLowerCase() || "";
+
+    const isLabelMatched = label.includes("phone") || label.includes("telefone") || name.includes("phone");
+    const isNameMatched = name.includes("telefone") || name.includes("mobile");
+
+    if (isLabelMatched || isNameMatched) {
+      // For example "Mobile Phone" -> "mobile phone"
+      // Or "Alternative Phone" -> "alternative phone"
+      const key = isLabelMatched ? label.trim() : name.trim();
+      phoneMap[key] = phoneMap[key] || [];
+      const action = element.type.includes("input") ? "push" : "unshift";
+      //custom
+      if (element.element.parentElement.classList[0] === "react-tel-input") phoneMap[key][action](element);
+
+      phoneMap[key][action](element);
+      return false;
+    }
+    return true;
+  });
+
+  console.log("phoneMap", phoneMap);
+
+  await Promise.all(
+    Object.keys(phoneMap).map(async (key, index) => {
+      // avoid alternative phone selects
+      if (index > 0) return;
+      const [countryCodeObj, inputObj] = phoneMap[key];
+      const { element: countryCodeElement } = countryCodeObj;
+      const { element: inputElement } = inputObj || {};
+      const phoneValue = matchValues("phone", fields);
+      const _phoneValue = phoneValue[0] === "+" ? phoneValue.substring(1) : phoneValue;
+      if (phoneMap[key].length === 1) return updateElementValue(phoneMap[key][0].element, _phoneValue);
+
+      const { countryCode, country, phoneNumber } = extractPhoneComponents(phoneValue);
+      const partialOrCompletePhone =
+        inputElement.parentElement.classList[0] === "react-tel-input" ? "+" + _phoneValue : phoneNumber;
+
+      await setCountryCode(countryCodeElement, [countryCode, country]);
+      updateElementValue(inputElement, partialOrCompletePhone);
+    })
+  );
+
+  return filteredInputs
+    .map((label) => {
+      const { text, element, type, name } = label;
+      const value = matchValues(text, fields) || matchValues(name, fields);
 
       if (!value) return null;
 
-      const input = type.includes("input_") && element;
-      const select = type === "select" && element;
+      const input = type.includes("input_");
+      const select = type === "select";
+      const isTextArea = type === "textarea";
 
-      if (!input && !select) return null;
+      if (!input && !select && !isTextArea) return null;
 
-      const indexSelect = select && matchSelectValue(value, select);
+      const indexSelect = select && matchSelectValue(value, element);
 
-      input && updateElementValue(input, value);
+      if (input || isTextArea) updateElementValue(element, value);
 
       if (select && indexSelect && autoFiller[data.url]) {
         autoFiller?.[data.url]?.(select, value);
@@ -252,27 +134,27 @@ const inputFiller = (fields = []) => {
     .filter(Boolean);
 };
 
+const updateFilledElements = () => {
+  const formElements = document.querySelectorAll(
+    "input:not([type=button]):not([type=checkbox]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]), textarea:not([inputmode='none']):not([aria-readonly='true']), select"
+  );
+
+  return Array.from(formElements).reduce((acc, element) => {
+    const elIdentifier = getElementSignature(element);
+    if (!elementsFilled.has(elIdentifier) && isVisible(element)) {
+      elementsFilled.add(elIdentifier);
+      return true;
+    }
+    return acc;
+  }, false);
+};
+
 const defaultHandleMutation = (mutationList) => {
   if (data.isEnabled === false) return;
-
   clearTimeout(data.timeoutId);
   data.timeoutId = setTimeout(() => {
-    const shouldNotUpdate = mutationList.some((mutationRecord) => {
-      const { addedNodes, target } = mutationRecord;
-      const isInsideForm = target.closest("form") !== null;
-      return (
-        isInsideForm ||
-        target.tagName === "INPUT" ||
-        target.nodeName === "INPUT" ||
-        target.nodeName === "SPAN" ||
-        Array.from(addedNodes).filter(({ nodeName }) => {
-          return nodeName === "#text" || nodeName === "INPUT";
-        }).length
-      );
-    });
-
-    if (shouldNotUpdate) return;
-
+    const shouldUpdate = updateFilledElements();
+    if (!shouldUpdate) return;
     return defaultFiller(data.fields);
   }, 300);
 };
@@ -296,11 +178,12 @@ const observeMutations = ({ config, handleMutation, watchSelector = "" }) => {
     observer.observe(element, _config);
 
     if (element.tagName === "BODY" && !handleMutation) {
-      defaultFiller(data.fields);
+      updateFilledElements();
+      return defaultFiller(data.fields);
     }
 
     return observer;
   }
 };
 
-export { observeMutations, defaultFiller, matchSelectValue, inputFiller, updateElementValue };
+export { observeMutations, defaultFiller, inputFiller, updateFilledElements };
