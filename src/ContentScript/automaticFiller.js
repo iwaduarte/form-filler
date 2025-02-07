@@ -1,12 +1,12 @@
 import { data } from "./cacheData.js";
 import { autoFillerSelect } from "./Custom/greenHouse.js";
 import {
-  findFirstTextAbove,
   getElementSignature,
   getInputsAndLabels,
   isVisible,
   matchSelectValue,
   setCountryCode,
+  setInputFile,
   updateElementValue,
 } from "./domUtils.js";
 import { extractPhoneComponents, matchValues } from "./utils.js";
@@ -18,51 +18,17 @@ const elementsFilled = new Set();
 
 const defaultFiller = async (fields = [], file = data.file) => {
   console.log("Default...");
-
-  const shouldUpdateFile = await inputFiller(fields);
-
-  if (!shouldUpdateFile || !shouldUpdateFile.length) return;
-
-  const fileInput = document.querySelector("input[type='file']");
-  const { text = "" } = findFirstTextAbove(fileInput) || {};
-  const firstText = text.toLowerCase();
-  const fileInputName = fileInput.name ? fileInput.name.toLowerCase() : "";
-  const MINIMUM_SIZE_ACCEPTABLE_FOR_UPDATE = 4;
-
-  if (
-    !fileInputName?.includes("resume") &&
-    !fileInputName?.includes("cv") &&
-    !fileInputName?.includes("currículo") &&
-    !firstText?.includes("resume") &&
-    !firstText?.includes("currículo") &&
-    !firstText?.includes("cv") &&
-    shouldUpdateFile.length < MINIMUM_SIZE_ACCEPTABLE_FOR_UPDATE
-  )
-    return;
-
-  if (!fileInput || !data.file) return;
-
-  const dataTransfer = new DataTransfer();
-  dataTransfer.items.add(file);
-  fileInput.files = dataTransfer.files;
-
-  const event = new Event("change", {
-    bubbles: true,
-    cancelable: false,
-  });
-
-  fileInput.dispatchEvent(event);
+  await inputFiller(fields);
 };
 
 const inputFiller = async (fields = []) => {
   const allInputs = getInputsAndLabels();
-  // console.log("allInputs", allInputs);
+  console.log("allInputs", allInputs);
 
   if (!allInputs.length) return false;
 
   const phoneMap = {};
-
-  console.log(allInputs);
+  const inputFile = [];
 
   const filteredInputs = allInputs.filter((element) => {
     const label = element.text?.toLowerCase() || "";
@@ -81,6 +47,10 @@ const inputFiller = async (fields = []) => {
       if (element.element.parentElement.classList[0] === "react-tel-input") phoneMap[key][action](element);
 
       phoneMap[key][action](element);
+      return false;
+    }
+    if (element.type === "input_file") {
+      inputFile.push(element);
       return false;
     }
     return true;
@@ -108,7 +78,7 @@ const inputFiller = async (fields = []) => {
     })
   );
 
-  return filteredInputs
+  const matchedInputs = filteredInputs
     .map((label) => {
       const { text, element, type, name } = label;
       const value = matchValues(text, fields) || matchValues(name, fields);
@@ -132,6 +102,11 @@ const inputFiller = async (fields = []) => {
       return true;
     })
     .filter(Boolean);
+
+  inputFile.map((file) => {
+    const { text, element, name } = file;
+    setInputFile(element, data.file, text, name, matchedInputs.length);
+  });
 };
 
 const updateFilledElements = () => {
