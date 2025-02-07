@@ -82,7 +82,7 @@ const getInputsAndLabels = () => {
 
   //removing search type
   const fieldSelector =
-    "input:not([type=button]):not([type=checkbox]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]), textarea:not([inputmode='none']):not([aria-readonly='true']), select";
+    "input:not([type=button]):not([type=checkbox]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]):not([type=password]), textarea:not([inputmode='none']):not([aria-readonly='true']), select";
 
   const documentFields = [...document.querySelectorAll(fieldSelector)];
   const formFields = forms.length ? [...forms].flatMap((form) => [...form.querySelectorAll(fieldSelector)]) : [];
@@ -247,6 +247,19 @@ const setCountryCode = (element, countryArray) => {
   if (parentElementClass === "react-tel-input") return simulateReactPhoneInput2Select(element, countryArray);
 };
 
+const getElementSignature = (el) => {
+  // Start with the lowercase tagName, e.g. "input"
+  const str = el.tagName.toLowerCase();
+  // If the element has an ID, append it like "#my-id"
+  const id = el.id ? "#" + el.id : "";
+  // If there are classes, append them like ".class1.class2"
+  const classes = el.classList && el.classList.length ? "." + Array.from(el.classList).join(".") : "";
+  // Optionally, you might include the 'name' attribute or anything else
+  const name = el.name ? `[name="${el.name}"]` : "";
+  // Return the custom string
+  return str + id + classes + name;
+};
+
 export {
   findFirstTextAbove,
   isVisible,
@@ -255,4 +268,5 @@ export {
   matchSelectValue,
   updateElementValue,
   setCountryCode,
+  getElementSignature,
 };
