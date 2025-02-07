@@ -1,4 +1,5 @@
 import { stripPunctuation } from "./utils.js";
+import { data } from "./cacheData.js";
 
 /**
  * Finds the first non-empty text above `elem` by traversing previous siblings
@@ -32,10 +33,11 @@ const findFirstTextAbove = (elem, maxDepth = 5) => {
 
         const rawText = sibling.textContent.trim();
         const strippedText = stripPunctuation(rawText);
+        console.log(strippedText);
 
         if (strippedText.length > 0) {
           return {
-            text: rawText, // Or use strippedText if you prefer to return the cleaned version
+            text: rawText.substring(0, 120), // Or use strippedText if you prefer to return the cleaned version
             node: sibling,
           };
         }
@@ -55,7 +57,7 @@ const findFirstTextAbove = (elem, maxDepth = 5) => {
         if (rawText) {
           const stripped = stripPunctuation(rawText);
           if (stripped.length > 0) {
-            return { text: rawText, node: sibling };
+            return { text: rawText.substring(0, 120), node: sibling };
           }
         }
       }
@@ -70,6 +72,7 @@ const findFirstTextAbove = (elem, maxDepth = 5) => {
 
 const isVisible = (elem) => {
   if (!elem) return false;
+  if (elem.type === "file") return true;
   const style = window.getComputedStyle(elem);
   if (style.display === "none" || style.visibility === "hidden") {
     return false;
@@ -260,6 +263,32 @@ const getElementSignature = (el) => {
   return str + id + classes + name;
 };
 
+const setInputFile = (fileInput, file, text, name, matchedLength) => {
+  const _text = text.toLowerCase();
+  const _name = name.toLowerCase();
+  const shouldUpload =
+    _text?.includes("resume") ||
+    _text?.includes("currículo") ||
+    _text?.includes("cv") ||
+    _name?.includes("resume") ||
+    _name?.includes("currículo") ||
+    _name?.includes("cv") ||
+    matchedLength > 2;
+
+  if (!shouldUpload || !fileInput || !file) return;
+
+  const dataTransfer = new DataTransfer();
+  dataTransfer.items.add(file);
+  fileInput.files = dataTransfer.files;
+
+  const event = new Event("change", {
+    bubbles: true,
+    cancelable: false,
+  });
+
+  fileInput.dispatchEvent(event);
+};
+
 export {
   findFirstTextAbove,
   isVisible,
@@ -269,4 +298,5 @@ export {
   updateElementValue,
   setCountryCode,
   getElementSignature,
+  setInputFile,
 };
