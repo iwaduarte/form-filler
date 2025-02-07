@@ -1,6 +1,6 @@
 import { stripPunctuation } from "./utils.js";
-import { data } from "./cacheData.js";
 
+const inputFilesFilled = new Set();
 /**
  * Finds the first non-empty text above `elem` by traversing previous siblings
  * and, if needed, moving up to the parent and continuing from its previous siblings.
@@ -33,7 +33,6 @@ const findFirstTextAbove = (elem, maxDepth = 5) => {
 
         const rawText = sibling.textContent.trim();
         const strippedText = stripPunctuation(rawText);
-        console.log(strippedText);
 
         if (strippedText.length > 0) {
           return {
@@ -277,6 +276,12 @@ const setInputFile = (fileInput, file, text, name, matchedLength) => {
 
   if (!shouldUpload || !fileInput || !file) return;
 
+  const elIdentifier = getElementSignature(fileInput);
+  if (inputFilesFilled.has(elIdentifier)) {
+    return;
+  }
+
+  inputFilesFilled.add(elIdentifier);
   const dataTransfer = new DataTransfer();
   dataTransfer.items.add(file);
   fileInput.files = dataTransfer.files;
