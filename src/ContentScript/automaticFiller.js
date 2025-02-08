@@ -62,7 +62,6 @@ const defaultFiller = async (fields = []) => {
     }
     // filter out location inputs
     if (label.includes("location") && locationSelectors.includes(element?.parentElement?.classList[0])) {
-      console.log("location found");
       locationList.push(elementObj);
       return false;
     }
@@ -121,7 +120,7 @@ const updateFilledElements = () => {
   }, false);
 };
 
-const defaultHandleMutation = (mutationList) => {
+const defaultHandleMutation = () => {
   if (data.isEnabled === false) return;
   clearTimeout(data.timeoutId);
   data.timeoutId = setTimeout(() => {
