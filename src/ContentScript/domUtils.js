@@ -1,6 +1,7 @@
-import { stripPunctuation } from "./utils.js";
+import { extractPhoneComponents, matchValues, stripPunctuation } from "./utils.js";
 
 const inputFilesFilled = new Set();
+const cachedLabels = new Map();
 /**
  * Finds the first non-empty text above `elem` by traversing previous siblings
  * and, if needed, moving up to the parent and continuing from its previous siblings.
@@ -10,7 +11,7 @@ const inputFilesFilled = new Set();
  *     node: <DOM Node>     // Where the text was found (could be a text node or an element)
  *   }
  */
-const findFirstTextAbove = (elem, maxDepth = 5) => {
+const findFirstTextAbove = (elem, maxDepth = 6) => {
   let current = elem;
   let depth = 0;
 
@@ -89,11 +90,15 @@ const getInputsAndLabels = () => {
   const documentFields = [...document.querySelectorAll(fieldSelector)];
   const formFields = forms.length ? [...forms].flatMap((form) => [...form.querySelectorAll(fieldSelector)]) : [];
 
-  const allFieldsSet = new Set([...documentFields, ...formFields]);
+  const allFields = [...new Set([...documentFields, ...formFields])];
 
-  const allFields = [...allFieldsSet];
   const visibleFields = Array.from(allFields).filter((field) => isVisible(field));
   const elements = visibleFields.map((field) => {
+    const fieldSignature = getElementSignature(field);
+    if (cachedLabels.has(fieldSignature)) {
+      return { ...cachedLabels.get(fieldSignature), element: field };
+    }
+
     const nameAttr = field.getAttribute("name") || "";
     // For <input> let's get type=..., for <textarea>/<select> let's just say "textarea" or "select"
     const fieldTag = field.tagName.toLowerCase();
@@ -104,13 +109,15 @@ const getInputsAndLabels = () => {
     // If the text is in an element node, we can store it directly; if it’s a text node, no "surroundingElement"
     const surroundingTextElement = node && node.nodeType === Node.ELEMENT_NODE ? node : null;
 
-    return {
+    const fieldsData = {
       element: field,
       name: nameAttr,
       type: fieldType,
       text,
       surroundingTextElement,
     };
+    cachedLabels.set(fieldSignature, fieldsData);
+    return fieldsData;
   });
 
   if (elements.length === 1 && elements[0].type === "input_file") {
@@ -294,6 +301,139 @@ const setInputFile = (fileInput, file, text, name, matchedLength) => {
   fileInput.dispatchEvent(event);
 };
 
+const setPhoneAndCountry = async (phoneArr, fields) => {
+  const [countryCodeObj, inputObj] = phoneArr;
+  const { element: countryCodeElement } = countryCodeObj;
+  const { element: inputElement } = inputObj || {};
+  const phoneValue = matchValues("phone", fields) || "";
+  const _phoneValue = phoneValue[0] === "+" ? phoneValue.substring(1) : phoneValue;
+  if (phoneArr.length === 1) return updateElementValue(phoneArr[0].element, _phoneValue);
+
+  const { countryCode, country, phoneNumber } = extractPhoneComponents(phoneValue);
+  const partialOrCompletePhone =
+    inputElement.parentElement.classList[0] === "react-tel-input" ? "+" + _phoneValue : phoneNumber;
+
+  await setCountryCode(countryCodeElement, [countryCode, country]);
+  updateElementValue(inputElement, partialOrCompletePhone);
+};
+
+const setLocation = async (location, fields) => {
+  console.log("location", location);
+
+  const { element: locationElement } = location;
+
+  const char = " ";
+  const rect = locationElement.getBoundingClientRect();
+
+  // Calculate the element's center relative to the viewport
+  const elementCenterX = rect.left + rect.width / 2;
+  const elementCenterY = rect.top + rect.height / 2;
+
+  // Calculate the absolute scroll positions needed to center the element:
+  // Add the current scroll offsets to the element's center, then subtract half the viewport's width/height.
+  const scrollX = window.scrollX + elementCenterX - window.innerWidth / 2 + 100;
+  const scrollY = window.scrollY + elementCenterY - window.innerHeight / 2 + 100;
+
+  // Smoothly scroll to center the element
+  window.scrollTo({
+    left: scrollX,
+    top: scrollY,
+  });
+  await new Promise((r) => setTimeout(r, 200));
+
+  const newRect = locationElement.getBoundingClientRect();
+
+  // Update the input value and dispatch an input event
+  const locationValue = matchValues("location", fields) || "";
+  locationElement.value = "";
+  locationElement.dispatchEvent(new Event("input", { bubbles: true }));
+  await new Promise((r) => setTimeout(r, 200));
+  locationElement.value = locationValue;
+  locationElement.dispatchEvent(new Event("input", { bubbles: true }));
+  locationElement.dispatchEvent(new KeyboardEvent("keydown", { key: char, bubbles: true }));
+  locationElement.dispatchEvent(
+    new MouseEvent("mouseup", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+      clientX: newRect.left,
+      clientY: newRect.top,
+    })
+  );
+  locationElement.dispatchEvent(
+    new MouseEvent("mousedown", {
+      view: window,
+      bubbles: true,
+      cancelable: true,
+      clientX: newRect.left,
+      clientY: newRect.top,
+    })
+  );
+  locationElement.focus();
+  // Calculate coordinates for the click offset
+  const clickX = newRect.left + 20;
+  const clickY = newRect.top + 55;
+  const target = await waitForElementTextAtPoint(clickX, clickY, locationValue, 5000, 200);
+  console.log("target", target);
+
+  if (target) {
+    // Dispatch new mouse events on the target element (each with a fresh instance)
+    target.dispatchEvent(
+      new MouseEvent("mousedown", {
+        view: window,
+        bubbles: true,
+        cancelable: true,
+        clientX: clickX,
+        clientY: clickY,
+      })
+    );
+    target.dispatchEvent(
+      new MouseEvent("mouseup", {
+        view: window,
+        bubbles: true,
+        cancelable: true,
+        clientX: clickX,
+        clientY: clickY,
+      })
+    );
+    target.dispatchEvent(
+      new MouseEvent("click", {
+        view: window,
+        bubbles: true,
+        cancelable: true,
+        clientX: clickX,
+        clientY: clickY,
+      })
+    );
+  }
+  await new Promise((r) => setTimeout(r, 200));
+};
+
+const waitForElementTextAtPoint = (x, y, substring, timeoutMs = 5000, intervalMs = 200) => {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+
+    (function check() {
+      const now = Date.now();
+      if (now - startTime >= timeoutMs) {
+        return reject(
+          new Error(
+            `Timeout: No element at (${x}, ${y}) had textContent including "${substring}" within ${timeoutMs} ms.`
+          )
+        );
+      }
+
+      const el = document.elementFromPoint(x, y);
+      // If there's an element and its textContent includes the target substring, we resolve
+      if (el && el.textContent && el.textContent.includes(substring)) {
+        return resolve(el);
+      }
+      // Otherwise, keep polling
+      setTimeout(check, intervalMs);
+    })();
+  });
+};
+
 export {
   findFirstTextAbove,
   isVisible,
@@ -304,4 +444,7 @@ export {
   setCountryCode,
   getElementSignature,
   setInputFile,
+  setPhoneAndCountry,
+  waitForElementTextAtPoint,
+  setLocation,
 };
