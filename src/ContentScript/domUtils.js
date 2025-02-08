@@ -1,4 +1,4 @@
-import { extractPhoneComponents, matchValues, stripPunctuation } from "./utils.js";
+import { extractPhoneComponents, matchValues, removeDiacritics, stripPunctuation } from "./utils.js";
 
 const inputFilesFilled = new Set();
 const cachedLabels = new Map();
@@ -165,7 +165,6 @@ const updateElementValue = (element, value) => {
 
 const matchSelectValue = (selectEl, values) => {
   if (!selectEl || !values.length) return null;
-
   selectEl.focus();
 
   const matchedOption = Array.from(selectEl.options).find((opt) =>
@@ -270,8 +269,9 @@ const getElementSignature = (el) => {
 };
 
 const setInputFile = (fileInput, file, text, name, matchedLength) => {
-  const _text = text.toLowerCase();
-  const _name = name.toLowerCase();
+  const _text = removeDiacritics(text).toLowerCase();
+  const _name = removeDiacritics(name).toLowerCase();
+
   const shouldUpload =
     _text?.includes("resume") ||
     _text?.includes("currículo") ||

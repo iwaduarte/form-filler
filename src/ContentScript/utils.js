@@ -48,4 +48,6 @@ const extractPhoneComponents = (phone) => {
   };
 };
 
-export { stripPunctuation, matchesWholeWord, matchValues, extractPhoneComponents };
+const removeDiacritics = (str) => str.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Remove combining marks
+
+export { stripPunctuation, matchesWholeWord, matchValues, extractPhoneComponents, removeDiacritics };
