@@ -5,23 +5,26 @@ import {
   getInputsAndLabels,
   isVisible,
   matchSelectValue,
-  setCountryCode,
   setInputFile,
+  setLocation,
+  setPhoneAndCountry,
   updateElementValue,
 } from "./domUtils.js";
-import { extractPhoneComponents, matchValues } from "./utils.js";
+import { matchValues } from "./utils.js";
 
 const autoFiller = {
   "boards.greenhouse.io": autoFillerSelect,
 };
 const elementsFilled = new Set();
 
-const defaultFiller = async (fields = [], file = data.file) => {
-  console.log("Default...");
-  await inputFiller(fields);
-};
+const ashByHQ = "_inputContainer_v5ami_28";
+const greenHouse = ["select__input-container", "select-shell"];
+const lever = "application-field";
+const locationSelectors = [ashByHQ, ...greenHouse, lever];
 
-const inputFiller = async (fields = []) => {
+const defaultFiller = async (fields = []) => {
+  console.log("Default...");
+
   const allInputs = getInputsAndLabels();
   console.log("allInputs", allInputs);
 
@@ -29,54 +32,48 @@ const inputFiller = async (fields = []) => {
 
   const phoneMap = {};
   const inputFile = [];
+  const locationList = [];
 
-  const filteredInputs = allInputs.filter((element) => {
-    const label = element.text?.toLowerCase() || "";
-    const name = element.name?.toLowerCase() || "";
+  const filteredInputs = allInputs.filter((elementObj) => {
+    const { text, name: _name, element, type } = elementObj;
+    const label = text?.toLowerCase() || "";
+    const name = _name?.toLowerCase() || "";
 
     const isLabelMatched = label.includes("phone") || label.includes("telefone") || name.includes("phone");
     const isNameMatched = name.includes("telefone") || name.includes("mobile");
 
+    // filter out phone inputs
     if (isLabelMatched || isNameMatched) {
       // For example "Mobile Phone" -> "mobile phone"
       // Or "Alternative Phone" -> "alternative phone"
       const key = isLabelMatched ? label.trim() : name.trim();
       phoneMap[key] = phoneMap[key] || [];
-      const action = element.type.includes("input") ? "push" : "unshift";
+      const action = type.includes("input") ? "push" : "unshift";
       //custom
-      if (element.element.parentElement.classList[0] === "react-tel-input") phoneMap[key][action](element);
+      if (element.parentElement.classList[0] === "react-tel-input") phoneMap[key][action](elementObj);
 
-      phoneMap[key][action](element);
+      phoneMap[key][action](elementObj);
       return false;
     }
-    if (element.type === "input_file") {
-      inputFile.push(element);
+    // filter out file inputs
+    if (type === "input_file") {
+      inputFile.push(elementObj);
+      return false;
+    }
+    // filter out location inputs
+    if (label.includes("location") && locationSelectors.includes(element?.parentElement?.classList[0])) {
+      console.log("location found");
+      locationList.push(elementObj);
       return false;
     }
     return true;
   });
 
-  console.log("phoneMap", phoneMap);
+  const [key] = Object.keys(phoneMap);
+  if (key && phoneMap[key]) await setPhoneAndCountry(phoneMap[key], fields);
 
-  await Promise.all(
-    Object.keys(phoneMap).map(async (key, index) => {
-      // avoid alternative phone selects
-      if (index > 0) return;
-      const [countryCodeObj, inputObj] = phoneMap[key];
-      const { element: countryCodeElement } = countryCodeObj;
-      const { element: inputElement } = inputObj || {};
-      const phoneValue = matchValues("phone", fields);
-      const _phoneValue = phoneValue[0] === "+" ? phoneValue.substring(1) : phoneValue;
-      if (phoneMap[key].length === 1) return updateElementValue(phoneMap[key][0].element, _phoneValue);
-
-      const { countryCode, country, phoneNumber } = extractPhoneComponents(phoneValue);
-      const partialOrCompletePhone =
-        inputElement.parentElement.classList[0] === "react-tel-input" ? "+" + _phoneValue : phoneNumber;
-
-      await setCountryCode(countryCodeElement, [countryCode, country]);
-      updateElementValue(inputElement, partialOrCompletePhone);
-    })
-  );
+  const [location] = locationList;
+  if (location) await setLocation(location, fields);
 
   const matchedInputs = filteredInputs
     .map((label) => {
@@ -161,4 +158,4 @@ const observeMutations = ({ config, handleMutation, watchSelector = "" }) => {
   }
 };
 
-export { observeMutations, defaultFiller, inputFiller, updateFilledElements };
+export { observeMutations, defaultFiller, updateFilledElements };
