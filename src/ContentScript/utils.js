@@ -11,7 +11,12 @@ const matchesWholeWord = (text, word) => {
   const escapedWord = word.replace(ESCAPE_REGEX, "\\$&");
 
   const pattern = new RegExp(`\\b${escapedWord}\\b`, "i");
-  return pattern.test(text);
+  const match = pattern.test(text);
+  if (!match) return false;
+  const wordLength = word.split(/\s+/).length;
+  const scaleBy = wordLength > 1 ? 0.75 : 1;
+  const textLength = text.split(/\s+/).length;
+  return textLength <= wordLength * scaleBy * 4;
 };
 
 const matchValues = (text, fields) => {
