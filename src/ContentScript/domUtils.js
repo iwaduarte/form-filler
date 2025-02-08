@@ -318,28 +318,29 @@ const setPhoneAndCountry = async (phoneArr, fields) => {
 };
 
 const setLocation = async (location, fields) => {
-  console.log("location", location);
-
   const { element: locationElement } = location;
+
+  const locationSignature = getElementSignature(locationElement);
+
+  if (inputFilesFilled.has(locationSignature)) return;
 
   const char = " ";
   const rect = locationElement.getBoundingClientRect();
 
-  // Calculate the element's center relative to the viewport
   const elementCenterX = rect.left + rect.width / 2;
   const elementCenterY = rect.top + rect.height / 2;
 
   // Calculate the absolute scroll positions needed to center the element:
   // Add the current scroll offsets to the element's center, then subtract half the viewport's width/height.
-  const scrollX = window.scrollX + elementCenterX - window.innerWidth / 2 + 100;
-  const scrollY = window.scrollY + elementCenterY - window.innerHeight / 2 + 100;
+  const scrollX = window.scrollX + elementCenterX - window.innerWidth / 2;
+  const scrollY = window.scrollY + elementCenterY - window.innerHeight / 2;
 
-  // Smoothly scroll to center the element
   window.scrollTo({
     left: scrollX,
     top: scrollY,
   });
-  await new Promise((r) => setTimeout(r, 200));
+
+  await waitForScrollingToStop(200);
 
   const newRect = locationElement.getBoundingClientRect();
 
@@ -373,7 +374,10 @@ const setLocation = async (location, fields) => {
   // Calculate coordinates for the click offset
   const clickX = newRect.left + 20;
   const clickY = newRect.top + 55;
-  const target = await waitForElementTextAtPoint(clickX, clickY, locationValue, 5000, 200);
+  const target = await waitForElementTextAtPoint(clickX, clickY, locationValue, 5000, 200).catch((err) => {
+    console.error(err);
+    return null;
+  });
   console.log("target", target);
 
   if (target) {
@@ -405,6 +409,7 @@ const setLocation = async (location, fields) => {
         clientY: clickY,
       })
     );
+    inputFilesFilled.add(locationSignature);
   }
   await new Promise((r) => setTimeout(r, 200));
 };
@@ -431,6 +436,26 @@ const waitForElementTextAtPoint = (x, y, substring, timeoutMs = 5000, intervalMs
       // Otherwise, keep polling
       setTimeout(check, intervalMs);
     })();
+  });
+};
+
+const waitForScrollingToStop = (timeout = 150) => {
+  return new Promise((resolve) => {
+    let scrollTimer = null;
+
+    function onScroll() {
+      // Clear any existing timer
+      clearTimeout(scrollTimer);
+      // Set a new timer
+      scrollTimer = setTimeout(() => {
+        // We consider scroll “stopped” once no scroll event has fired for `timeout` ms
+        window.removeEventListener("scroll", onScroll);
+        resolve();
+      }, timeout);
+    }
+
+    // Start listening
+    window.addEventListener("scroll", onScroll);
   });
 };
 
