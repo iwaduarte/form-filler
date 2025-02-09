@@ -73,14 +73,7 @@ const defaultFiller = async (fields = []) => {
   const [location] = locationList;
   const [firstFile, secondFile] = inputFile;
 
-  await Promise.all([
-    setLocation(location, fields),
-    setPhoneAndCountry(phoneMap[key], fields),
-    setInputFile(firstFile.element, data.file, firstFile.text, firstFile.name, filteredInputs.length),
-    setInputFile(secondFile.element, data.file, secondFile.text, secondFile.name, filteredInputs.length),
-  ]).catch((err) => console.log(err));
-
-  filteredInputs
+  const matchedInputs = filteredInputs
     .map((label) => {
       const { text, element, type, name } = label;
       const value = matchValues(text, fields) || matchValues(name, fields);
@@ -104,6 +97,13 @@ const defaultFiller = async (fields = []) => {
       return true;
     })
     .filter(Boolean);
+
+  await Promise.all([
+    setLocation(location, fields),
+    setPhoneAndCountry(phoneMap[key], fields),
+    setInputFile(firstFile.element, data.file, firstFile.text, firstFile.name, matchedInputs.length),
+    setInputFile(secondFile.element, data.file, secondFile.text, secondFile.name, matchedInputs.length),
+  ]).catch((err) => console.log(err));
 };
 
 const updateFilledElements = () => {
