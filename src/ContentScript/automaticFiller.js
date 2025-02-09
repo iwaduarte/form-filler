@@ -20,7 +20,8 @@ const elementsFilled = new Set();
 const ashByHQ = "_inputContainer_v5ami_28";
 const greenHouse = ["select__input-container", "select-shell"];
 const lever = "application-field";
-const locationSelectors = [ashByHQ, ...greenHouse, lever];
+const rippling = "css-12m8htv-StyledBaseInputContainer-InputContainer";
+const locationSelectors = [ashByHQ, ...greenHouse, lever, rippling];
 
 const defaultFiller = async (fields = []) => {
   console.log("Default...");
@@ -69,12 +70,17 @@ const defaultFiller = async (fields = []) => {
   });
 
   const [key] = Object.keys(phoneMap);
-  if (key && phoneMap[key]) await setPhoneAndCountry(phoneMap[key], fields);
-
   const [location] = locationList;
-  if (location) await setLocation(location, fields);
+  const [firstFile, secondFile] = inputFile;
 
-  const matchedInputs = filteredInputs
+  await Promise.all([
+    setLocation(location, fields),
+    setPhoneAndCountry(phoneMap[key], fields),
+    setInputFile(firstFile.element, data.file, firstFile.text, firstFile.name, filteredInputs.length),
+    setInputFile(secondFile.element, data.file, secondFile.text, secondFile.name, filteredInputs.length),
+  ]).catch((err) => console.log(err));
+
+  filteredInputs
     .map((label) => {
       const { text, element, type, name } = label;
       const value = matchValues(text, fields) || matchValues(name, fields);
@@ -87,7 +93,7 @@ const defaultFiller = async (fields = []) => {
 
       if (!input && !select && !isTextArea) return null;
 
-      const indexSelect = select && matchSelectValue(value, element);
+      const indexSelect = select && matchSelectValue(element, [value]);
 
       if (input || isTextArea) updateElementValue(element, value);
 
@@ -98,11 +104,6 @@ const defaultFiller = async (fields = []) => {
       return true;
     })
     .filter(Boolean);
-
-  inputFile.map((file) => {
-    const { text, element, name } = file;
-    setInputFile(element, data.file, text, name, matchedInputs.length);
-  });
 };
 
 const updateFilledElements = () => {
