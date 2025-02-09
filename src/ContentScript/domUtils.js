@@ -299,9 +299,13 @@ const setInputFile = (fileInput, file, text, name, matchedLength) => {
   });
 
   fileInput.dispatchEvent(event);
+
+  return true;
 };
 
 const setPhoneAndCountry = async (phoneArr, fields) => {
+  if (!phoneArr.length) return null;
+
   const [countryCodeObj, inputObj] = phoneArr;
   const { element: countryCodeElement } = countryCodeObj;
   const { element: inputElement } = inputObj || {};
@@ -317,7 +321,9 @@ const setPhoneAndCountry = async (phoneArr, fields) => {
   updateElementValue(inputElement, partialOrCompletePhone);
 };
 
-const setLocation = async (location, fields) => {
+const setLocation = async (location, fields, retry = 0) => {
+  if (!location) return null;
+
   const { element: locationElement } = location;
 
   const locationSignature = getElementSignature(locationElement);
@@ -340,7 +346,7 @@ const setLocation = async (location, fields) => {
     top: scrollY,
   });
 
-  await waitForScrollingToStop(200);
+  await waitForScrollingToStop();
 
   const newRect = locationElement.getBoundingClientRect();
 
@@ -374,7 +380,7 @@ const setLocation = async (location, fields) => {
   // Calculate coordinates for the click offset
   const clickX = newRect.left + 20;
   const clickY = newRect.top + 55;
-  const target = await waitForElementTextAtPoint(clickX, clickY, locationValue, 5000, 200).catch((err) => {
+  const target = await waitForElementTextAtPoint(clickX, clickY, locationValue, 1500, 200).catch((err) => {
     console.error(err);
     return null;
   });
@@ -411,10 +417,14 @@ const setLocation = async (location, fields) => {
     );
     inputFilesFilled.add(locationSignature);
   }
+  if (retry === 0 && !target) {
+    console.log("Retrying location again");
+    return setLocation(location, fields, 1);
+  }
   await new Promise((r) => setTimeout(r, 200));
 };
 
-const waitForElementTextAtPoint = (x, y, substring, timeoutMs = 5000, intervalMs = 200) => {
+const waitForElementTextAtPoint = (x, y, substring, timeoutMs = 3000, intervalMs = 200) => {
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
 
@@ -439,23 +449,27 @@ const waitForElementTextAtPoint = (x, y, substring, timeoutMs = 5000, intervalMs
   });
 };
 
-const waitForScrollingToStop = (timeout = 150) => {
+const waitForScrollingToStop = () => {
+  let last_changed_frame = 0;
+  let last_x = window.scrollX;
+  let last_y = window.scrollY;
+
   return new Promise((resolve) => {
-    let scrollTimer = null;
-
-    function onScroll() {
-      // Clear any existing timer
-      clearTimeout(scrollTimer);
-      // Set a new timer
-      scrollTimer = setTimeout(() => {
-        // We consider scroll “stopped” once no scroll event has fired for `timeout` ms
-        window.removeEventListener("scroll", onScroll);
+    function tick(frames) {
+      // We requestAnimationFrame either for 500 frames or until 20 frames with
+      // no change have been observed.
+      if (frames >= 500 || frames - last_changed_frame > 20) {
         resolve();
-      }, timeout);
+      } else {
+        if (window.scrollX !== last_x || window.scrollY !== last_y) {
+          last_changed_frame = frames;
+          last_x = window.scrollX;
+          last_y = window.scrollY;
+        }
+        requestAnimationFrame(tick.bind(null, frames + 1));
+      }
     }
-
-    // Start listening
-    window.addEventListener("scroll", onScroll);
+    tick(0);
   });
 };
 
