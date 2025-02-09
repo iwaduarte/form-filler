@@ -2,7 +2,7 @@ import pkg from "./package.json" assert { type: "json" };
 
 const manifest = {
   background: {
-    scripts: ["src/Background/background.js", "src/Background/hotreload.js"],
+    scripts: ["src/Background/background.js"],
     persistent: false,
   },
   icons: {
