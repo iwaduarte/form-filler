@@ -12,6 +12,7 @@ const data = {
   isEnabled: true,
   timeoutId: 0,
   file: null,
+  navBar: false,
 };
 
 export { data };
