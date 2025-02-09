@@ -304,7 +304,7 @@ const setInputFile = (fileInput, file, text, name, matchedLength) => {
 };
 
 const setPhoneAndCountry = async (phoneArr, fields) => {
-  if (!phoneArr.length) return null;
+  if (!phoneArr?.length) return null;
 
   const [countryCodeObj, inputObj] = phoneArr;
   const { element: countryCodeElement } = countryCodeObj;
