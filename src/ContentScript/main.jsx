@@ -2,8 +2,16 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import css from "./content.css";
 import Context from "./Context.jsx";
-import { addWhiteList, deleteWhiteList, getFromStore, syncStore } from "../storage.js";
-import { defaultFiller, observeMutations } from "./automaticFiller.js";
+import {
+  addWhiteList,
+  deleteWhiteList,
+  getFromStore,
+  ignoreWebsite,
+  removeFromIgnoreWebsite,
+  syncStore,
+} from "../storage.js";
+import { waitForIdle } from "./waitForIddle.js";
+import { defaultFiller, observeMutations, updateFilledElements } from "./automaticFiller.js";
 import * as angelList from "./Custom/angelList.js";
 import * as yCombinator from "./Custom/yCombinator.js";
 import { data } from "./cacheData.js";
@@ -21,17 +29,29 @@ const browserObject = chrome || browser;
 let _pdfFile = null;
 try {
   _pdfFile = pdfFile;
-} catch (e) {}
+} catch (e) {
+  console.log("Error importing pdf", e);
+}
 
 const startOnKey = async (evt, fillForms) => {
+  if (!data.isEnabled) return;
+
   const url = document.location.hostname.replace(/^(www\.)/, "");
 
   const modifier = evt.ctrlKey || evt.metaKey;
 
   if (modifier && evt.altKey && evt.key === "f") {
-    if (!data.isEnabled) return;
     console.log(url);
-    fillForms(data.fields);
+    await fillForms(data.fields);
+  }
+
+  if (modifier && evt.altKey && evt.key === "i") {
+    const newData = await ignoreWebsite(url);
+    data.ignoreList = { ...data.ignoreList, ...newData };
+  }
+  if (modifier && evt.altKey && evt.key === "k") {
+    const newData = await removeFromIgnoreWebsite(url);
+    data.ignoreList = { ...data.ignoreList, ...newData };
   }
 
   if (modifier && evt.altKey && evt.key === "a") {
@@ -77,11 +97,12 @@ const startApplication = async (pdfFile, siteConfiguration, data) => {
   data.url = url;
   const { config, handleMutation, filler, watchSelector } = siteConfiguration[url] || {};
   const fillForms = filler || defaultFiller;
-  const { isEnabled, formFiller = [], whiteList = {} } = (await getFromStore(null)) || {};
+  const { isEnabled, navBar, formFiller = [], whiteList = {} } = (await getFromStore(null)) || {};
 
   data.whiteList = { ...data.whiteList, ...whiteList };
   data.fields = formFiller;
   data.isEnabled = isEnabled ?? data.isEnabled;
+  data.navBar = navBar ?? data.navBar;
 
   const component = (
     <React.StrictMode>
@@ -93,15 +114,19 @@ const startApplication = async (pdfFile, siteConfiguration, data) => {
   document.addEventListener("keydown", (evt) => startOnKey(evt, fillForms));
 
   syncStore(async (changes) => {
-    const { formFiller, isEnabled: isEnabledFromSync = true, whiteList } = changes;
+    const { formFiller, navBar, isEnabled: isEnabledFromSync = true, whiteList } = changes;
 
     const { newValue: newFormValues } = formFiller || {};
 
     data.fields = newFormValues || data.fields;
     data.isEnabled = isEnabledFromSync?.newValue || data.isEnabled;
     data.whiteList = { ...data.whiteList, ...whiteList?.newValue };
+    data.navBar = navBar?.newValue || data.navBar;
 
-    data.isEnabled && fillForms(data.fields);
+    if (data.isEnabled) {
+      updateFilledElements();
+      await fillForms(data.fields);
+    }
   });
 
   browserObject.runtime.onMessage.addListener(async function (message) {
@@ -109,17 +134,21 @@ const startApplication = async (pdfFile, siteConfiguration, data) => {
     if (action === "fill") {
       const fileData = await base64ToBlob(JSON.parse(file));
       data.file = fileData;
-      fillForms(data.fields, fileData);
+      await fillForms(data.fields, fileData);
     }
   });
 
-  reactRoot.render(component);
+  if (data.navBar) reactRoot.render(component);
 
-  if (!data.whiteList[url] || !isEnabled) return;
+  // !data.whiteList[url] ||
+  if (isEnabled === false) return;
 
   observeMutations({ config, handleMutation, watchSelector });
 };
 
-startApplication(_pdfFile, siteConfiguration, data).then();
+waitForIdle({ idleTimeout: 600, maxWait: 1500 }).then(() => {
+  console.log("Network is idle (or maxWait reached");
+  startApplication(_pdfFile, siteConfiguration, data).then();
+});
 
 export { startApplication };

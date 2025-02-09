@@ -46,6 +46,22 @@ const updateProperty = async (propertyName, updatedData = []) => {
   }
 };
 
+const ignoreWebsite = async (url) => {
+  const storedItem = (await getFromStore("ignoreList")) || {};
+  if (!url) return storedItem;
+  const ignoreList = { ...storedItem, [url]: true };
+  await setStore(ignoreList, "ignoreList");
+  return ignoreList;
+  z;
+};
+const removeFromIgnoreWebsite = async (url) => {
+  const storedItem = (await getFromStore("ignoreList")) || {};
+  if (!url) return storedItem;
+  const newData = { ...storedItem, [url]: false };
+  await setStore(newData, "ignoreList");
+  return newData;
+};
+
 const addWhiteList = async (url) => {
   const storedItem = (await getFromStore("whiteList")) || {};
   if (!url) return storedItem;
@@ -72,4 +88,6 @@ export {
   addWhiteList,
   deleteWhiteList,
   updateProperty,
+  ignoreWebsite,
+  removeFromIgnoreWebsite,
 };
