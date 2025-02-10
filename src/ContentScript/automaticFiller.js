@@ -62,7 +62,10 @@ const defaultFiller = async (fields = []) => {
       return false;
     }
     // filter out location inputs
-    if (label.includes("location") && locationSelectors.includes(element?.parentElement?.classList[0])) {
+    if (
+      (label.includes("location") || label.includes("city, state, and country")) &&
+      locationSelectors.includes(element?.parentElement?.classList[0])
+    ) {
       locationList.push(elementObj);
       return false;
     }
