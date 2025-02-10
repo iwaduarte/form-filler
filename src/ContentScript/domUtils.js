@@ -269,6 +269,8 @@ const getElementSignature = (el) => {
 };
 
 const setInputFile = (fileInput, file, text, name, matchedLength) => {
+  if (!fileInput || !file) return;
+
   const _text = removeDiacritics(text).toLowerCase();
   const _name = removeDiacritics(name).toLowerCase();
 

@@ -101,8 +101,8 @@ const defaultFiller = async (fields = []) => {
   await Promise.all([
     setLocation(location, fields),
     setPhoneAndCountry(phoneMap[key], fields),
-    setInputFile(firstFile.element, data.file, firstFile.text, firstFile.name, matchedInputs.length),
-    setInputFile(secondFile.element, data.file, secondFile.text, secondFile.name, matchedInputs.length),
+    setInputFile(firstFile?.element, data.file, firstFile?.text, firstFile?.name, matchedInputs?.length),
+    setInputFile(secondFile?.element, data.file, secondFile?.text, secondFile?.name, matchedInputs?.length),
   ]).catch((err) => console.log(err));
 };
 
