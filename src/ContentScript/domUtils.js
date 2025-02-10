@@ -333,26 +333,6 @@ const setLocation = async (location, fields, retry = 0) => {
 
   if (inputFilesFilled.has(locationSignature)) return;
 
-  const char = " ";
-  const rect = locationElement.getBoundingClientRect();
-
-  const elementCenterX = rect.left + rect.width / 2;
-  const elementCenterY = rect.top + rect.height / 2;
-
-  // Calculate the absolute scroll positions needed to center the element:
-  // Add the current scroll offsets to the element's center, then subtract half the viewport's width/height.
-  const scrollX = window.scrollX + elementCenterX - window.innerWidth / 2;
-  const scrollY = window.scrollY + elementCenterY - window.innerHeight / 2;
-
-  window.scrollTo({
-    left: scrollX,
-    top: scrollY,
-  });
-
-  await waitForScrollingToStop();
-
-  const newRect = locationElement.getBoundingClientRect();
-
   // Update the input value and dispatch an input event
   const locationValue = matchValues("location", fields) || "";
   locationElement.value = "";
@@ -360,71 +340,38 @@ const setLocation = async (location, fields, retry = 0) => {
   await new Promise((r) => setTimeout(r, 200));
   locationElement.value = locationValue;
   locationElement.dispatchEvent(new Event("input", { bubbles: true }));
-  locationElement.dispatchEvent(new KeyboardEvent("keydown", { key: char, bubbles: true }));
-  locationElement.dispatchEvent(
-    new MouseEvent("mouseup", {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      clientX: newRect.left,
-      clientY: newRect.top,
-    })
-  );
-  locationElement.dispatchEvent(
-    new MouseEvent("mousedown", {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-      clientX: newRect.left,
-      clientY: newRect.top,
-    })
-  );
-  locationElement.focus();
-  // Calculate coordinates for the click offset
-  const clickX = newRect.left + 20;
-  const clickY = newRect.top + 55;
-  const target = await waitForElementTextAtPoint(clickX, clickY, locationValue, 1500, 200).catch((err) => {
+
+  const rect = locationElement.getBoundingClientRect();
+  const positiveClickX = rect.left + 20;
+  const positiveClickY = rect.top + 56;
+  const negativeClickX = rect.left + 20;
+  const negativeClickY = rect.top - 10;
+
+  const target = await Promise.any([
+    waitForElementTextAtPoint(positiveClickX, positiveClickY, locationValue, 1500, 200),
+    waitForElementTextAtPoint(negativeClickX, negativeClickY, locationValue, 1500, 200),
+  ]).catch((err) => {
     console.error(err);
     return null;
   });
-  console.log("target", target);
+
+  locationElement.dispatchEvent(
+    new KeyboardEvent("keydown", {
+      key: "Enter",
+      code: "Enter",
+      bubbles: true,
+      cancelable: true,
+    })
+  );
 
   if (target) {
-    // Dispatch new mouse events on the target element (each with a fresh instance)
-    target.dispatchEvent(
-      new MouseEvent("mousedown", {
-        view: window,
-        bubbles: true,
-        cancelable: true,
-        clientX: clickX,
-        clientY: clickY,
-      })
-    );
-    target.dispatchEvent(
-      new MouseEvent("mouseup", {
-        view: window,
-        bubbles: true,
-        cancelable: true,
-        clientX: clickX,
-        clientY: clickY,
-      })
-    );
-    target.dispatchEvent(
-      new MouseEvent("click", {
-        view: window,
-        bubbles: true,
-        cancelable: true,
-        clientX: clickX,
-        clientY: clickY,
-      })
-    );
     inputFilesFilled.add(locationSignature);
   }
+
   if (retry === 0 && !target) {
     console.log("Retrying location again");
     return setLocation(location, fields, 1);
   }
-  await new Promise((r) => setTimeout(r, 200));
 };
 
 const waitForElementTextAtPoint = (x, y, substring, timeoutMs = 3000, intervalMs = 200) => {
