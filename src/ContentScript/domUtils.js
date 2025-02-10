@@ -103,8 +103,9 @@ const getInputsAndLabels = () => {
     // For <input> let's get type=..., for <textarea>/<select> let's just say "textarea" or "select"
     const fieldTag = field.tagName.toLowerCase();
     const fieldType = fieldTag === "input" ? "input_" + (field.getAttribute("type") || "text") : fieldTag;
-
-    const { text, node } = findFirstTextAbove(field);
+    const labelElement = field.labels;
+    const textLabel = labelElement[0]?.textContent || "";
+    const { text, node } = textLabel ? { text: textLabel, node: labelElement } : findFirstTextAbove(field);
 
     // If the text is in an element node, we can store it directly; if it’s a text node, no "surroundingElement"
     const surroundingTextElement = node && node.nodeType === Node.ELEMENT_NODE ? node : null;
