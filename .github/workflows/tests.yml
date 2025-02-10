@@ -26,4 +26,7 @@ jobs:
         run: npm ci
 
       - name: Run Jest tests
-        run: npm test
+        # There is a bug in Jest that when running in Linux environments it fails
+        # to run a test with fetch. It says that fetch is not defined. This is a
+        # workaround to fix this issue.
+        run: npm test -- --runInBand
