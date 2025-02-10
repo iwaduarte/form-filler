@@ -10,6 +10,18 @@ Object.defineProperty(window.Element.prototype, "innerText", {
   configurable: true,
   enumerable: true,
 });
+Object.defineProperty(HTMLElement.prototype, "offsetWidth", {
+  configurable: true,
+  get: function () {
+    return this.style.display === "none" || this.style.visibility === "hidden" ? 0 : 100;
+  },
+});
+Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
+  configurable: true,
+  get: function () {
+    return this.style.display === "none" || this.style.visibility === "hidden" ? 0 : 20;
+  },
+});
 
 global.chrome = {
   storage: {

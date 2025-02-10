@@ -1,10 +1,11 @@
 import { jest } from "@jest/globals";
-import { defaultFiller, inputFiller, matchSelectValue, updateElementValue } from "../automaticFiller.js";
+import { defaultFiller } from "../automaticFiller.js";
+import { matchSelectValue, updateElementValue } from "../domUtils.js";
 
 describe("defaultFiller", () => {
   test("should fill input and textarea elements", () => {
     document.body.innerHTML = `
-      <div>
+      <div style="display: block; visibility: visible; width: 100px; height: auto;">
         <label for="email">Email:</label>
         <input type="email" id="email" />
         <label for="message">Message:</label>
@@ -37,7 +38,7 @@ describe("matchSelectValue", () => {
     const desiredValue = "Option 2";
     const expectedValue = "option2";
 
-    const result = matchSelectValue(desiredValue, selectElement);
+    const result = matchSelectValue(selectElement, [desiredValue]);
     expect(result).toBe(expectedValue);
   });
 
@@ -51,7 +52,7 @@ describe("matchSelectValue", () => {
     const selectElement = document.querySelector("select");
     const desiredValue = "Option 3";
 
-    const result = matchSelectValue(desiredValue, selectElement);
+    const result = matchSelectValue(selectElement, [desiredValue]);
     expect(result).toBeUndefined();
   });
 });
@@ -74,10 +75,10 @@ describe("updateElementValue", () => {
   });
 });
 
-describe("inputFiller", () => {
+describe("defaultFiller", () => {
   test("should fill input and textarea elements with field values", () => {
     document.body.innerHTML = `
-      <div>
+      <div style="display: block; visibility: visible; width: 100px; height: auto;">
         <label for="email">Email:</label>
         <input type="email" id="email" />
         <label for="message">Message:</label>
@@ -89,7 +90,7 @@ describe("inputFiller", () => {
       { name: "Message", value: "Hello!" },
     ];
 
-    inputFiller(fields);
+    defaultFiller(fields);
 
     const emailInput = document.getElementById("email");
     const messageTextarea = document.getElementById("message");

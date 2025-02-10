@@ -20,7 +20,7 @@ describe("filler function", () => {
     filler(fields);
 
     const textarea = document.querySelector("textarea");
-    expect(textarea.value).toBe("Hello John!");
+    expect(textarea.value).toBe("Hello John recruiter!");
   });
 });
 
