@@ -40,14 +40,17 @@ const defaultFiller = async (fields = []) => {
     const label = text?.toLowerCase() || "";
     const name = _name?.toLowerCase() || "";
 
-    const isLabelMatched = label.includes("phone") || label.includes("telefone") || name.includes("phone");
-    const isNameMatched = name.includes("telefone") || name.includes("mobile");
+    const isLabelMatched = label.includes("phone") || label.includes("telefone") || label.includes("mobile");
+    const isNameMatched = name.includes("phone") || name.includes("telefone") || name.includes("mobile");
 
     // filter out phone inputs
     if (isLabelMatched || isNameMatched) {
       // For example "Mobile Phone" -> "mobile phone"
       // Or "Alternative Phone" -> "alternative phone"
-      const key = isLabelMatched ? label.trim() : name.trim();
+      const keyName = "countryCode_mobile";
+      const _key = label.includes("country code") ? keyName : false;
+      const customKey = phoneMap[keyName]?.length === 1 ? keyName : false;
+      const key = _key || customKey || (isLabelMatched ? label.trim() : name.trim());
       phoneMap[key] = phoneMap[key] || [];
       const action = type.includes("input") ? "push" : "unshift";
       //custom
@@ -73,9 +76,9 @@ const defaultFiller = async (fields = []) => {
   });
 
   const [key] = Object.keys(phoneMap);
+  // console.log("phoneMap", phoneMap);
   const [location] = locationList;
   const [firstFile, secondFile] = inputFile;
-
   const matchedInputs = filteredInputs
     .map((label) => {
       const { text, element, type, name } = label;
