@@ -104,12 +104,14 @@ const defaultFiller = async (fields = []) => {
     })
     .filter(Boolean);
 
-  await Promise.all([
-    setLocation(location, fields),
-    setPhoneAndCountry(phoneMap[key], fields),
-    setInputFile(firstFile?.element, data.file, firstFile?.text, firstFile?.name, matchedInputs?.length),
-    setInputFile(secondFile?.element, data.file, secondFile?.text, secondFile?.name, matchedInputs?.length),
-  ]).catch((err) => console.log(err));
+  await Promise.all[
+    (setInputFile(firstFile?.element, data.file, firstFile?.text, firstFile?.name, matchedInputs?.length),
+    setInputFile(secondFile?.element, data.file, secondFile?.text, secondFile?.name, matchedInputs?.length))
+  ];
+
+  await Promise.all([setLocation(location, fields), setPhoneAndCountry(phoneMap[key], fields)]).catch((err) =>
+    console.log(err)
+  );
 };
 
 const updateFilledElements = () => {
