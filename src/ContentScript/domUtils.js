@@ -93,8 +93,8 @@ const getInputsAndLabels = () => {
   const allFields = [...new Set([...documentFields, ...formFields])];
 
   const visibleFields = Array.from(allFields).filter((field) => isVisible(field));
-  const elements = visibleFields.map((field) => {
-    const fieldSignature = getElementSignature(field);
+  const elements = visibleFields.map((field, index) => {
+    const fieldSignature = getElementSignature(field, index);
     if (cachedLabels.has(fieldSignature)) {
       return { ...cachedLabels.get(fieldSignature), element: field };
     }
@@ -256,7 +256,7 @@ const setCountryCode = (element, countryArray) => {
   if (parentElementClass === "react-tel-input") return simulateReactPhoneInput2Select(element, countryArray);
 };
 
-const getElementSignature = (el) => {
+const getElementSignature = (el, idx) => {
   // Start with the lowercase tagName, e.g. "input"
   const str = el.tagName.toLowerCase();
   // If the element has an ID, append it like "#my-id"
@@ -266,7 +266,7 @@ const getElementSignature = (el) => {
   // Optionally, you might include the 'name' attribute or anything else
   const name = el.name ? `[name="${el.name}"]` : "";
   // Return the custom string
-  return str + id + classes + name;
+  return str + id + classes + name + "." + idx;
 };
 
 const setInputFile = (fileInput, file, text, name, matchedLength) => {
@@ -396,30 +396,6 @@ const waitForElementTextAtPoint = (x, y, substring, timeoutMs = 3000, intervalMs
       // Otherwise, keep polling
       setTimeout(check, intervalMs);
     })();
-  });
-};
-
-const waitForScrollingToStop = () => {
-  let last_changed_frame = 0;
-  let last_x = window.scrollX;
-  let last_y = window.scrollY;
-
-  return new Promise((resolve) => {
-    function tick(frames) {
-      // We requestAnimationFrame either for 500 frames or until 20 frames with
-      // no change have been observed.
-      if (frames >= 500 || frames - last_changed_frame > 20) {
-        resolve();
-      } else {
-        if (window.scrollX !== last_x || window.scrollY !== last_y) {
-          last_changed_frame = frames;
-          last_x = window.scrollX;
-          last_y = window.scrollY;
-        }
-        requestAnimationFrame(tick.bind(null, frames + 1));
-      }
-    }
-    tick(0);
   });
 };
 
