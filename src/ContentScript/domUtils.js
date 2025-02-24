@@ -256,7 +256,7 @@ const setCountryCode = (element, countryArray) => {
   if (parentElementClass === "react-tel-input") return simulateReactPhoneInput2Select(element, countryArray);
 };
 
-const getElementSignature = (el, idx) => {
+const getElementSignature = (el, idx = "") => {
   // Start with the lowercase tagName, e.g. "input"
   const str = el.tagName.toLowerCase();
   // If the element has an ID, append it like "#my-id"
@@ -266,7 +266,7 @@ const getElementSignature = (el, idx) => {
   // Optionally, you might include the 'name' attribute or anything else
   const name = el.name ? `[name="${el.name}"]` : "";
   // Return the custom string
-  return str + id + classes + name + "." + idx;
+  return str + id + classes + name + (idx ? "." + idx : "");
 };
 
 const setInputFile = (fileInput, file, text, name, matchedLength) => {
@@ -333,13 +333,9 @@ const setLocation = async (location, fields, retry = 0) => {
 
   if (inputFilesFilled.has(locationSignature)) return;
 
-  // Update the input value and dispatch an input event
   const locationValue = matchValues("location", fields) || "";
-  locationElement.value = "";
-  locationElement.dispatchEvent(new Event("input", { bubbles: true }));
-  await new Promise((r) => setTimeout(r, 200));
-  locationElement.value = locationValue;
-  locationElement.dispatchEvent(new Event("input", { bubbles: true }));
+
+  await type(locationElement, locationValue);
 
   const rect = locationElement.getBoundingClientRect();
   const positiveClickX = rect.left + 20;
@@ -348,23 +344,15 @@ const setLocation = async (location, fields, retry = 0) => {
   const negativeClickY = rect.top - 10;
 
   const target = await Promise.any([
-    waitForElementTextAtPoint(positiveClickX, positiveClickY, locationValue, 1500, 200),
-    waitForElementTextAtPoint(negativeClickX, negativeClickY, locationValue, 1500, 200),
+    waitForElementTextAtPoint(positiveClickX, positiveClickY, locationValue, 10000, 200),
+    waitForElementTextAtPoint(negativeClickX, negativeClickY, locationValue, 10000, 200),
   ]).catch((err) => {
     console.error(err);
     return null;
   });
 
-  locationElement.dispatchEvent(
-    new KeyboardEvent("keydown", {
-      key: "Enter",
-      code: "Enter",
-      bubbles: true,
-      cancelable: true,
-    })
-  );
-
   if (target) {
+    mouseClick(target);
     inputFilesFilled.add(locationSignature);
   }
 
@@ -398,6 +386,36 @@ const waitForElementTextAtPoint = (x, y, substring, timeoutMs = 3000, intervalMs
     })();
   });
 };
+
+const type = async (element, text, delay = 100) => {
+  for (const char of text) {
+    element.focus();
+    const keyDownEvent = new KeyboardEvent("keydown", { key: char, bubbles: true });
+    element.dispatchEvent(keyDownEvent);
+
+    const keyPressEvent = new KeyboardEvent("keypress", { key: char, bubbles: true });
+    element.dispatchEvent(keyPressEvent);
+
+    element.value += char;
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+
+    const keyUpEvent = new KeyboardEvent("keyup", { key: char, bubbles: true });
+    element.dispatchEvent(keyUpEvent);
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
+  }
+};
+
+function mouseClick(element) {
+  const mouseDown = new MouseEvent("mousedown", { bubbles: true, cancelable: true, view: window });
+  const mouseUp = new MouseEvent("mouseup", { bubbles: true, cancelable: true, view: window });
+  const click = new MouseEvent("click", { bubbles: true, cancelable: true, view: window });
+
+  element.dispatchEvent(mouseDown);
+  element.dispatchEvent(mouseUp);
+  element.dispatchEvent(click);
+}
 
 export {
   findFirstTextAbove,
