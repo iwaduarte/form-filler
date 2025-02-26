@@ -9,6 +9,7 @@ import {
   setLocation,
   setPhoneAndCountry,
   updateElementValue,
+  type as typeFn,
 } from "./domUtils.js";
 import { matchValues } from "./utils.js";
 
@@ -79,35 +80,38 @@ const defaultFiller = async (fields = []) => {
   // console.log("phoneMap", phoneMap);
   const [location] = locationList;
   const [firstFile, secondFile] = inputFile;
-  const matchedInputs = filteredInputs
-    .map((label) => {
-      const { text, element, type, name } = label;
-      const value = matchValues(text, fields) || matchValues(name, fields);
+  const matchedInputs = (
+    await Promise.all(
+      filteredInputs.map(async (label) => {
+        const { text, element, type, name } = label;
+        const value = matchValues(text, fields) || matchValues(name, fields);
 
-      if (!value) return null;
+        if (!value) return null;
 
-      const input = type.includes("input_");
-      const select = type === "select";
-      const isTextArea = type === "textarea";
+        const input = type.includes("input_");
+        const select = type === "select";
+        const isTextArea = type === "textarea";
 
-      if (!input && !select && !isTextArea) return null;
+        if (!input && !select && !isTextArea) return null;
 
-      const indexSelect = select && matchSelectValue(element, [value]);
+        const indexSelect = select && matchSelectValue(element, [value]);
 
-      if (input || isTextArea) updateElementValue(element, value);
+        if (input || isTextArea)
+          // updateElementValue(element, value);
+          await typeFn(element, value);
 
-      if (select && indexSelect && autoFiller[data.url]) {
-        autoFiller?.[data.url]?.(select, value);
-      }
+        if (select && indexSelect && autoFiller[data.url]) {
+          autoFiller?.[data.url]?.(select, value);
+        }
 
-      return true;
-    })
-    .filter(Boolean);
-
-  await Promise.all[
-    (setInputFile(firstFile?.element, data.file, firstFile?.text, firstFile?.name, matchedInputs?.length),
-    setInputFile(secondFile?.element, data.file, secondFile?.text, secondFile?.name, matchedInputs?.length))
-  ];
+        return true;
+      })
+    )
+  ).filter(Boolean);
+  await Promise.all([
+    setInputFile(firstFile?.element, data.file, firstFile?.text, firstFile?.name, matchedInputs?.length),
+    setInputFile(secondFile?.element, data.file, secondFile?.text, secondFile?.name, matchedInputs?.length),
+  ]);
 
   await Promise.all([setLocation(location, fields), setPhoneAndCountry(phoneMap[key], fields)]).catch((err) =>
     console.log(err)
