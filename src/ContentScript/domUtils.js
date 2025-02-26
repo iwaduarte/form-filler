@@ -85,7 +85,7 @@ const getInputsAndLabels = () => {
 
   //removing search type
   const fieldSelector =
-    "input:not([type=button]):not([type=checkbox]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]):not([type=password]), textarea:not([inputmode='none']):not([aria-readonly='true']), select";
+    "input:not([type=button])::not([placeholder=Search]):not([type=checkbox]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]):not([type=password]), textarea:not([inputmode='none']):not([aria-readonly='true']), select";
 
   const documentFields = [...document.querySelectorAll(fieldSelector)];
   const formFields = forms.length ? [...forms].flatMap((form) => [...form.querySelectorAll(fieldSelector)]) : [];
@@ -329,34 +329,32 @@ const setLocation = async (location, fields, retry = 0) => {
 
   const { element: locationElement } = location;
 
-  const locationSignature = getElementSignature(locationElement);
-
-  if (inputFilesFilled.has(locationSignature)) return;
-
   const locationValue = matchValues("location", fields) || "";
 
   await type(locationElement, locationValue);
 
-  const rect = locationElement.getBoundingClientRect();
-  const positiveClickX = rect.left + 20;
-  const positiveClickY = rect.top + 56;
-  const negativeClickX = rect.left + 20;
-  const negativeClickY = rect.top - 10;
+  // const rect = locationElement.getBoundingClientRect();
+  // const positiveClickX = rect.left + 20;
+  // const positiveClickY = rect.top + 56;
+  // const negativeClickX = rect.left + 20;
+  // const negativeClickY = rect.top - 10;
+  //
+  // const target = await Promise.any([
+  //   waitForElementTextAtPoint(positiveClickX, positiveClickY, locationValue, 10000, 200),
+  //   waitForElementTextAtPoint(negativeClickX, negativeClickY, locationValue, 10000, 200),
+  // ]).catch((err) => {
+  //   console.error(err);
+  //   return null;
+  // });
 
-  const target = await Promise.any([
-    waitForElementTextAtPoint(positiveClickX, positiveClickY, locationValue, 10000, 200),
-    waitForElementTextAtPoint(negativeClickX, negativeClickY, locationValue, 10000, 200),
-  ]).catch((err) => {
-    console.error(err);
-    return null;
-  });
+  // Wait for dropdown to appear instead of assuming coordinates
+  const dropdown = await waitForDropdown(10000);
 
-  if (target) {
-    mouseClick(target);
-    inputFilesFilled.add(locationSignature);
+  if (dropdown) {
+    mouseClick(dropdown);
   }
 
-  if (retry === 0 && !target) {
+  if (retry === 0 && !dropdown) {
     console.log("Retrying location again");
     return setLocation(location, fields, 1);
   }
@@ -387,7 +385,39 @@ const waitForElementTextAtPoint = (x, y, substring, timeoutMs = 3000, intervalMs
   });
 };
 
-const type = async (element, text, delay = 100) => {
+const waitForDropdown = (timeoutMs = 3000, intervalMs = 200) => {
+  return new Promise((resolve, reject) => {
+    const startTime = Date.now();
+
+    (function check() {
+      const now = Date.now();
+      if (now - startTime >= timeoutMs) {
+        return reject(new Error("Dropdown did not appear within time limit."));
+      }
+
+      const dropdown = document.querySelector(
+        "div.dropdown-location[id^='location-'], div[role='option'], div[role='menu']"
+      );
+      if (dropdown) {
+        return resolve(dropdown);
+      }
+
+      setTimeout(check, intervalMs);
+    })();
+  });
+};
+
+const type = async (element, text, delay = 25) => {
+  if (element.value === text) {
+    return;
+  }
+  // Clear the existing value if it's different from the new text
+  if (element.value) {
+    element.focus();
+    element.value = "";
+    element.dispatchEvent(new Event("input", { bubbles: true }));
+    element.dispatchEvent(new Event("change", { bubbles: true }));
+  }
   for (const char of text) {
     element.focus();
     const keyDownEvent = new KeyboardEvent("keydown", { key: char, bubbles: true });
@@ -430,4 +460,5 @@ export {
   setPhoneAndCountry,
   waitForElementTextAtPoint,
   setLocation,
+  type,
 };
