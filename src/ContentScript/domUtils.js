@@ -85,7 +85,7 @@ const getInputsAndLabels = () => {
 
   //removing search type
   const fieldSelector =
-    "input:not([type=button])::not([placeholder=Search]):not([type=checkbox]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]):not([type=password]), textarea:not([inputmode='none']):not([aria-readonly='true']), select";
+    "input:not([type=button]):not([placeholder=Search]):not([type=checkbox]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]):not([type=password]), textarea:not([inputmode='none']):not([aria-readonly='true']), select";
 
   const documentFields = [...document.querySelectorAll(fieldSelector)];
   const formFields = forms.length ? [...forms].flatMap((form) => [...form.querySelectorAll(fieldSelector)]) : [];
