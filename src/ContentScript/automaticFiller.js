@@ -27,7 +27,7 @@ const locationSelectors = [ashByHQ, ...greenHouse, lever, rippling];
 const defaultFiller = async (fields = []) => {
   console.log("Default...");
 
-  const allInputs = getInputsAndLabels();
+  const allInputs = getInputsAndLabels().filter(({ cached }) => !cached);
   console.log("allInputs", allInputs);
 
   if (!allInputs.length) return false;
