@@ -73,6 +73,7 @@ const findFirstTextAbove = (elem, maxDepth = 6) => {
 const isVisible = (elem) => {
   if (!elem) return false;
   if (elem.type === "file") return true;
+  if (elem.getAttribute("aria-hidden")) return false;
   const style = window.getComputedStyle(elem);
   if (style.display === "none" || style.visibility === "hidden") {
     return false;
@@ -85,7 +86,7 @@ const getInputsAndLabels = () => {
 
   //removing search type
   const fieldSelector =
-    "input:not([type=button]):not([placeholder=Search]):not([type=checkbox]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]):not([type=password]), textarea:not([inputmode='none']):not([aria-readonly='true']), select";
+    "input:not([type=button]):not([placeholder=Search]):not([type=checkbox]):not([type=radio]):not([type=submit]):not([type=reset]):not([type=hidden]):not([disabled]):not([type=search]):not([type=password]), textarea:not([inputmode='none']):not([aria-readonly='true']), select";
 
   const documentFields = [...document.querySelectorAll(fieldSelector)];
   const formFields = forms.length ? [...forms].flatMap((form) => [...form.querySelectorAll(fieldSelector)]) : [];
@@ -94,9 +95,9 @@ const getInputsAndLabels = () => {
 
   const visibleFields = Array.from(allFields).filter((field) => isVisible(field));
   const elements = visibleFields.map((field, index) => {
-    const fieldSignature = getElementSignature(field, index);
+    const fieldSignature = getElementSignature(field, String(index));
     if (cachedLabels.has(fieldSignature)) {
-      return { ...cachedLabels.get(fieldSignature), element: field };
+      return { ...cachedLabels.get(fieldSignature), element: field, cached: true };
     }
 
     const nameAttr = field.getAttribute("name") || "";
@@ -272,6 +273,10 @@ const getElementSignature = (el, idx = "") => {
 const setInputFile = (fileInput, file, text, name, matchedLength) => {
   if (!fileInput || !file) return;
 
+  const fileExtension = file?.name?.split(".")?.pop()?.toLowerCase();
+  const accept = fileInput?.accept;
+  if (accept && !accept.toLowerCase().includes(`.${fileExtension}`)) return;
+
   const _text = removeDiacritics(text).toLowerCase();
   const _name = removeDiacritics(name).toLowerCase();
 
@@ -290,8 +295,8 @@ const setInputFile = (fileInput, file, text, name, matchedLength) => {
   if (inputFilesFilled.has(elIdentifier)) {
     return;
   }
-
   inputFilesFilled.add(elIdentifier);
+
   const dataTransfer = new DataTransfer();
   dataTransfer.items.add(file);
   fileInput.files = dataTransfer.files;
@@ -329,23 +334,13 @@ const setLocation = async (location, fields, retry = 0) => {
 
   const { element: locationElement } = location;
 
+  const locationSignature = getElementSignature(locationElement);
+
+  if (inputFilesFilled.has(locationSignature)) return;
+
   const locationValue = matchValues("location", fields) || "";
 
   await type(locationElement, locationValue);
-
-  // const rect = locationElement.getBoundingClientRect();
-  // const positiveClickX = rect.left + 20;
-  // const positiveClickY = rect.top + 56;
-  // const negativeClickX = rect.left + 20;
-  // const negativeClickY = rect.top - 10;
-  //
-  // const target = await Promise.any([
-  //   waitForElementTextAtPoint(positiveClickX, positiveClickY, locationValue, 10000, 200),
-  //   waitForElementTextAtPoint(negativeClickX, negativeClickY, locationValue, 10000, 200),
-  // ]).catch((err) => {
-  //   console.error(err);
-  //   return null;
-  // });
 
   // Wait for dropdown to appear instead of assuming coordinates
   const dropdown = await waitForDropdown(10000);
@@ -432,7 +427,6 @@ const type = async (element, text, delay = 25) => {
 
     const keyUpEvent = new KeyboardEvent("keyup", { key: char, bubbles: true });
     element.dispatchEvent(keyUpEvent);
-
     await new Promise((resolve) => setTimeout(resolve, delay));
   }
 };
